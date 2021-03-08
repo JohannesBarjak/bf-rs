@@ -2,14 +2,14 @@ use std::io::Write;
 use std::io::Read;
 
 struct Tape {
-    data: [u8; 30000],
+    cell: [u8; 30000],
     stack: Vec<usize>,
     ptr: usize
 }
 
 fn main() {
     let tape = Tape {
-        data: [0; 30000],
+        cell: [0; 30000],
         stack: Vec::new(),
         ptr: 0
     };
@@ -27,20 +27,20 @@ fn interpreter(input: String, mut tape: Tape) {
 
     while i < input.len() {
         match input.chars().nth(i).unwrap() {
-            '+' => tape.data[tape.ptr] += 1,
+            '+' => tape.cell[tape.ptr] += 1,
             '>' => tape.ptr += 1,
             '<' => tape.ptr -= 1,
 
             '[' => tape.stack.push(i),
-            ']' => if tape.data[tape.ptr] != 0 { i = *tape.stack.last().unwrap(); }
+            ']' => if tape.cell[tape.ptr] != 0 { i = *tape.stack.last().unwrap(); }
                    else { tape.stack.pop().unwrap(); },
 
-            '-' => tape.data[tape.ptr] -= 1,
+            '-' => tape.cell[tape.ptr] -= 1,
 
-            '.' => { print!("{}", tape.data[tape.ptr] as char);
+            '.' => { print!("{}", tape.cell[tape.ptr] as char);
                 std::io::stdout().flush().unwrap() },
 
-            ',' => tape.data[tape.ptr] = {
+            ',' => tape.cell[tape.ptr] = {
                 let pg_input = std::io::stdin()
                     .bytes().next().unwrap();
                 pg_input.unwrap() as u8 },
