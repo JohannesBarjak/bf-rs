@@ -24,7 +24,7 @@ fn main() {
 
 fn interpreter(input: String, mut tape: Tape) {
     let mut i = 0;
-    let mut lpc = 0;
+    let mut loop_count = 0;
 
     let input_char = |i| input.chars().nth(i).unwrap();
 
@@ -35,11 +35,11 @@ fn interpreter(input: String, mut tape: Tape) {
             '<' => tape.ptr -= 1,
 
             '[' => if tape.cell[tape.ptr] != 0 { tape.stack.push(i); } else {
-                       lpc += 1;
-                       while lpc != 0 {
+                       loop_count += 1;
+                       while loop_count != 0 {
                            i += 1;
-                           if input_char(i) == '[' { lpc += 1; }
-                           else if input_char(i) == ']' { lpc -= 1; }
+                           if input_char(i) == '[' { loop_count += 1; }
+                           else if input_char(i) == ']' { loop_count -= 1; }
                        }
                    },
 
