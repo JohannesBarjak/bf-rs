@@ -2,16 +2,16 @@ use std::io::Write;
 use std::io::Read;
 
 struct Tape {
-    cell: [u8; 30000],
+    cell: [u8; 60_000],
     stack: Vec<usize>,
     ptr: usize
 }
 
 fn main() {
     let tape = Tape {
-        cell: [0; 30000],
+        cell: [0; 60_000],
         stack: Vec::new(),
-        ptr: 0
+        ptr: 30_000
     };
 
     let args: Vec<String> = std::env::args().collect();
