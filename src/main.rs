@@ -1,17 +1,17 @@
-use std::io::Write;
 use std::io::Read;
+use std::io::Write;
 
 struct Tape {
     cell: [u8; 60_000],
     stack: Vec<usize>,
-    ptr: usize
+    ptr: usize,
 }
 
 fn main() {
     let tape = Tape {
         cell: [0; 60_000],
         stack: Vec::new(),
-        ptr: 30_000
+        ptr: 30_000,
     };
 
     let args: Vec<String> = std::env::args().collect();
@@ -33,32 +33,46 @@ fn interpreter(input: String, mut tape: Tape) {
             '+' => tape.cell[tape.ptr] += 1,
             '-' => tape.cell[tape.ptr] -= 1,
 
-            '[' => if tape.cell[tape.ptr] != 0 { tape.stack.push(i); } else {
-                       loop_count += 1;
-                       while loop_count != 0 {
-                           i += 1;
-                           if input_char(i) == '[' { loop_count += 1; }
-                           else if input_char(i) == ']' { loop_count -= 1; }
-                       }
-                   },
+            '[' => {
+                if tape.cell[tape.ptr] != 0 {
+                    tape.stack.push(i);
+                } else {
+                    loop_count += 1;
+                    while loop_count != 0 {
+                        i += 1;
+                        if input_char(i) == '[' {
+                            loop_count += 1;
+                        } else if input_char(i) == ']' {
+                            loop_count -= 1;
+                        }
+                    }
+                }
+            }
 
-            ']' => if tape.cell[tape.ptr] != 0 { i = *tape.stack.last().unwrap(); } else {
-                       tape.stack.pop().unwrap();
-                   },
+            ']' => {
+                if tape.cell[tape.ptr] != 0 {
+                    i = *tape.stack.last().unwrap();
+                } else {
+                    tape.stack.pop().unwrap();
+                }
+            }
 
             '>' => tape.ptr += 1,
             '<' => tape.ptr -= 1,
 
-            '.' => { print!("{}", tape.cell[tape.ptr] as char);
-                     std::io::stdout().flush().unwrap() },
+            '.' => {
+                print!("{}", tape.cell[tape.ptr] as char);
+                std::io::stdout().flush().unwrap()
+            }
 
-            ',' => tape.cell[tape.ptr] = {
-                       let pg_input = std::io::stdin()
-                           .bytes().next().unwrap();
-                       pg_input.unwrap() as u8
-                   },
+            ',' => {
+                tape.cell[tape.ptr] = {
+                    let pg_input = std::io::stdin().bytes().next().unwrap();
+                    pg_input.unwrap() as u8
+                }
+            }
 
-            _ => ()
+            _ => (),
         }
         i += 1;
     }
