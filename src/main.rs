@@ -15,10 +15,11 @@ fn main() {
     };
 
     let args: Vec<String> = std::env::args().collect();
-    (args.len() == 1).then(|| panic!("Enter a bf file"));
 
     let input = &args[1];
-    let input = std::fs::read_to_string(input).unwrap();
+    let input = std::fs::read_to_string(input)
+        .expect("Please enter a valid filename");
+
     interpreter(input, tape);
 }
 
