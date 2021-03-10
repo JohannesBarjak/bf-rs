@@ -31,8 +31,7 @@ fn interpreter(input: String, mut tape: Tape) {
     while i < input.len() {
         match input_char(i) {
             '+' => tape.cell[tape.ptr] += 1,
-            '>' => tape.ptr += 1,
-            '<' => tape.ptr -= 1,
+            '-' => tape.cell[tape.ptr] -= 1,
 
             '[' => if tape.cell[tape.ptr] != 0 { tape.stack.push(i); } else {
                        loop_count += 1;
@@ -47,7 +46,8 @@ fn interpreter(input: String, mut tape: Tape) {
                        tape.stack.pop().unwrap();
                    },
 
-            '-' => tape.cell[tape.ptr] -= 1,
+            '>' => tape.ptr += 1,
+            '<' => tape.ptr -= 1,
 
             '.' => { print!("{}", tape.cell[tape.ptr] as char);
                      std::io::stdout().flush().unwrap() },
