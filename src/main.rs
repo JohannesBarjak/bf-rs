@@ -16,9 +16,9 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
 
-    let input = &args[1];
+    let input = args.get(1).expect("No input filename");
     let input = std::fs::read_to_string(input)
-        .expect("Please enter a valid filename");
+        .expect("Invalid filename");
 
     interpreter(input, tape);
 }
@@ -52,9 +52,9 @@ fn interpreter(input: String, mut tape: Tape) {
 
             ']' => {
                 if tape.cell[tape.ptr] != 0 {
-                    i = *tape.stack.last().unwrap();
+                    i = *tape.stack.last().expect("Malformed bf loop");
                 } else {
-                    tape.stack.pop().unwrap();
+                    tape.stack.pop().expect("Malformed bf loop");
                 }
             }
 
