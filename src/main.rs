@@ -25,7 +25,7 @@ fn main() {
 
 fn interpreter(input: String, mut tape: Tape) {
     let mut i = 0;
-    let mut loop_count;
+    let mut loop_counter;
 
     let input_char = |i| input.chars().nth(i).unwrap();
 
@@ -34,17 +34,20 @@ fn interpreter(input: String, mut tape: Tape) {
             '+' => tape.cell[tape.ptr] += 1,
             '-' => tape.cell[tape.ptr] -= 1,
 
+            '>' => tape.ptr += 1,
+            '<' => tape.ptr -= 1,
+
             '[' => {
                 if tape.cell[tape.ptr] != 0 {
                     tape.stack.push(i);
                 } else {
-                    loop_count = 1;
-                    while loop_count != 0 {
+                    loop_counter = 1;
+                    while loop_counter != 0 {
                         i += 1;
                         if input_char(i) == '[' {
-                            loop_count += 1;
+                            loop_counter += 1;
                         } else if input_char(i) == ']' {
-                            loop_count -= 1;
+                            loop_counter -= 1;
                         }
                     }
                 }
@@ -57,9 +60,6 @@ fn interpreter(input: String, mut tape: Tape) {
                     tape.stack.pop().expect("Malformed bf loop");
                 }
             }
-
-            '>' => tape.ptr += 1,
-            '<' => tape.ptr -= 1,
 
             '.' => {
                 print!("{}", tape.cell[tape.ptr] as char);
