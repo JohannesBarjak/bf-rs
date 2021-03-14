@@ -27,7 +27,7 @@ fn interpreter(input: String, mut tape: Tape) {
     let mut i = 0;
     let mut loop_counter;
 
-    let input_char = |i| input.chars().nth(i).unwrap();
+    let input_char = |i| input.chars().nth(i).expect("Malformed loop");
 
     while i < input.len() {
         match input_char(i) {
@@ -66,12 +66,8 @@ fn interpreter(input: String, mut tape: Tape) {
                 std::io::stdout().flush().unwrap()
             }
 
-            ',' => {
-                tape.cell[tape.ptr] = {
-                    let pg_input = std::io::stdin().bytes().next().unwrap();
-                    pg_input.unwrap() as u8
-                }
-            }
+            ',' => tape.cell[tape.ptr] = std::io::stdin()
+                .bytes().next().unwrap().unwrap() as u8,
 
             _ => (),
         }
