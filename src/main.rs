@@ -20,7 +20,7 @@ fn main() {
     let input = std::fs::read_to_string(input)
         .expect("Invalid filename");
 
-    interpreter(input.as_bytes(), tape);
+    interpreter(cleanup_input(input).as_bytes(), tape);
 }
 
 fn interpreter(input: &[u8], mut tape: Tape) {
@@ -73,4 +73,28 @@ fn interpreter(input: &[u8], mut tape: Tape) {
         }
         i += 1;
     }
+}
+
+fn cleanup_input(input: String) -> String {
+    let mut clean_input = String::new();
+
+    for i in input.as_bytes() {
+        match *i as char {
+            '+' => clean_input.push('+'),
+            '-' => clean_input.push('-'),
+
+            '>' => clean_input.push('>'),
+            '<' => clean_input.push('<'),
+
+            '[' => clean_input.push('['),
+            ']' => clean_input.push(']'),
+
+            '.' => clean_input.push('.'),
+            ',' => clean_input.push(','),
+
+            _ => (),
+        }
+    }
+
+    clean_input
 }
