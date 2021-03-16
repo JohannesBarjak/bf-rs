@@ -20,14 +20,14 @@ fn main() {
     let input = std::fs::read_to_string(input)
         .expect("Invalid filename");
 
-    interpreter(input, tape);
+    interpreter(input.as_bytes(), tape);
 }
 
-fn interpreter(input: String, mut tape: Tape) {
+fn interpreter(input: &[u8], mut tape: Tape) {
     let mut i = 0;
     let mut loop_counter;
 
-    let input_char = |i| input.as_bytes()[i] as char;
+    let input_char = |i| input[i] as char;
 
     while i < input.len() {
         match input_char(i) {
