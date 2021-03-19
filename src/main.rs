@@ -17,10 +17,10 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     let input = args.get(1).expect("No input file specified");
-    let input = std::fs::read_to_string(input)
-        .expect("Invalid filename");
+    let input = cleanup_input(std::fs::read_to_string(input)
+        .expect("Invalid filename"));
 
-    interpreter(cleanup_input(input).as_bytes(), tape);
+    interpreter(input.as_bytes(), tape);
 }
 
 fn interpreter(input: &[u8], mut tape: Tape) {
@@ -55,9 +55,9 @@ fn interpreter(input: &[u8], mut tape: Tape) {
 
             ']' => {
                 if tape.cell[tape.ptr] != 0 {
-                    i = *tape.stack.last().expect("Malformed loop");
+                    i = *tape.stack.last().expect("Unmatched ] character");
                 } else {
-                    tape.stack.pop().expect("Malformed loop");
+                    tape.stack.pop().expect("Unmatched ] character");
                 }
             }
 
@@ -73,28 +73,14 @@ fn interpreter(input: &[u8], mut tape: Tape) {
         }
         i += 1;
     }
+
+    if !tape.stack.is_empty() {
+        panic!("Unmatched [ character");
+    }
 }
 
 fn cleanup_input(input: String) -> String {
-    let mut clean_input = String::new();
-
-    for i in input.as_bytes() {
-        match *i as char {
-            '+' => clean_input.push('+'),
-            '-' => clean_input.push('-'),
-
-            '>' => clean_input.push('>'),
-            '<' => clean_input.push('<'),
-
-            '[' => clean_input.push('['),
-            ']' => clean_input.push(']'),
-
-            '.' => clean_input.push('.'),
-            ',' => clean_input.push(','),
-
-            _ => (),
-        }
-    }
-
-    clean_input
+    input.chars()
+        .filter(|i| matches!(i, '+' | '-' | '>' | '<' | '[' | ']' | '.' | ','))
+        .collect()
 }
