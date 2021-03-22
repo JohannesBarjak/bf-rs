@@ -20,28 +20,44 @@ fn main() {
     let input = cleanup_input(std::fs::read_to_string(input)
         .expect("Invalid filename"));
 
-    interpreter(input.as_bytes(), tape);
+    interpreter(optimize_brainfuck(input).as_bytes(), tape);
 }
 
 fn interpreter(input: &[u8], mut tape: Tape) {
     let mut i = 0;
-    let mut loop_counter;
-
     let input_char = |i| input[i] as char;
 
     while i < input.len() {
         match input_char(i) {
             '+' => tape.cell[tape.ptr] += 1,
+            'a' => {
+                i += 1;
+                tape.cell[tape.ptr] += input_char(i).to_digit(10).unwrap() as u8;
+            }
+
             '-' => tape.cell[tape.ptr] -= 1,
+            's' => {
+                i += 1;
+                tape.cell[tape.ptr] -= input_char(i).to_digit(10).unwrap() as u8;
+            }
 
             '>' => tape.ptr += 1,
+            'r' => {
+                i += 1;
+                tape.ptr += input_char(i).to_digit(10).unwrap() as usize;
+            }
+
             '<' => tape.ptr -= 1,
+            'l' => {
+                i += 1;
+                tape.ptr -= input_char(i).to_digit(10).unwrap() as usize;
+            }
 
             '[' => {
                 if tape.cell[tape.ptr] != 0 {
                     tape.stack.push(i);
                 } else {
-                    loop_counter = 1;
+                    let mut loop_counter = 1;
                     while loop_counter != 0 {
                         i += 1;
                         if input_char(i) == '[' {
@@ -69,6 +85,8 @@ fn interpreter(input: &[u8], mut tape: Tape) {
             ',' => tape.cell[tape.ptr] = std::io::stdin()
                 .bytes().next().unwrap().unwrap() as u8,
 
+            'z' => tape.cell[tape.ptr] = 0,
+
             _ => (),
         }
         i += 1;
@@ -80,7 +98,23 @@ fn interpreter(input: &[u8], mut tape: Tape) {
 }
 
 fn cleanup_input(input: String) -> String {
-    input.chars()
-        .filter(|i| matches!(i, '+' | '-' | '>' | '<' | '[' | ']' | '.' | ','))
+    input
+        .chars()
+        .filter(|i| "+-><[].,".chars().any(|c| c == *i))
         .collect()
+}
+
+fn optimize_brainfuck(mut input: String) -> String {
+    for i in (2..=9).rev() {
+        for c in 0..=3 {
+            input = input.replace(
+                (b"+-><"[c] as char).to_string().repeat(i).as_str(),
+                format!("{}{}", b"asrl"[c] as char, i).as_str(),
+            )
+        }
+    }
+
+    input
+        .replace("[-]", "z")
+        .replace("[+]", "z")
 }
