@@ -1,5 +1,5 @@
 # bf-rs
-A very simple brainfuck interpreter written in rust
+A simple optimizing brainfuck interpreter written in rust
 ## Usage
 ```
 ./bf file
