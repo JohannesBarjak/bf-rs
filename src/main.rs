@@ -29,29 +29,33 @@ fn interpreter(input: &[u8], mut tape: Tape) {
 
     while i < input.len() {
         match input_char(i) {
-            '+' => tape.cell[tape.ptr] += 1,
             'a' => {
                 i += 1;
                 tape.cell[tape.ptr] += input_char(i).to_digit(10).unwrap() as u8;
             }
 
-            '-' => tape.cell[tape.ptr] -= 1,
+            '+' => tape.cell[tape.ptr] += 1,
+
             's' => {
                 i += 1;
                 tape.cell[tape.ptr] -= input_char(i).to_digit(10).unwrap() as u8;
             }
 
-            '>' => tape.ptr += 1,
+            '-' => tape.cell[tape.ptr] -= 1,
+
             'r' => {
                 i += 1;
                 tape.ptr += input_char(i).to_digit(10).unwrap() as usize;
             }
 
-            '<' => tape.ptr -= 1,
+            '>' => tape.ptr += 1,
+
             'l' => {
                 i += 1;
                 tape.ptr -= input_char(i).to_digit(10).unwrap() as usize;
             }
+
+            '<' => tape.ptr -= 1,
 
             '[' => {
                 if tape.cell[tape.ptr] != 0 {
