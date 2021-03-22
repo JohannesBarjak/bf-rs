@@ -114,7 +114,5 @@ fn optimize_brainfuck(mut input: String) -> String {
         }
     }
 
-    input
-        .replace("[-]", "z")
-        .replace("[+]", "z")
+    input.replace("[-]", "z").replace("[+]", "z")
 }
