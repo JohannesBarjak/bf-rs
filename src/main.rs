@@ -20,60 +20,59 @@ fn main() {
     let input = cleanup_input(std::fs::read_to_string(input)
         .expect("Invalid filename"));
 
-    interpreter(optimize_brainfuck(input).as_bytes(), tape);
+    interpret(optimize_brainfuck(input).as_bytes(), tape);
 }
 
-fn interpreter(input: &[u8], mut tape: Tape) {
+fn interpret(input: &[u8], mut tape: Tape) {
     let mut i = 0;
-    let input_char = |i| input[i] as char;
 
     while i < input.len() {
-        match input_char(i) {
-            'a' => {
+        match input[i] {
+            b'a' => {
                 i += 1;
-                tape.cell[tape.ptr] += input_char(i).to_digit(10).unwrap() as u8;
+                tape.cell[tape.ptr] += input[i] - 48;
             }
 
-            '+' => tape.cell[tape.ptr] += 1,
+            b'+' => tape.cell[tape.ptr] += 1,
 
-            's' => {
+            b's' => {
                 i += 1;
-                tape.cell[tape.ptr] -= input_char(i).to_digit(10).unwrap() as u8;
+                tape.cell[tape.ptr] -= input[i] - 48;
             }
 
-            '-' => tape.cell[tape.ptr] -= 1,
+            b'-' => tape.cell[tape.ptr] -= 1,
 
-            'r' => {
+            b'r' => {
                 i += 1;
-                tape.ptr += input_char(i).to_digit(10).unwrap() as usize;
+                tape.ptr += (input[i] - 48) as usize;
             }
 
-            '>' => tape.ptr += 1,
+            b'>' => tape.ptr += 1,
 
-            'l' => {
+            b'l' => {
                 i += 1;
-                tape.ptr -= input_char(i).to_digit(10).unwrap() as usize;
+                tape.ptr -= (input[i] - 48) as usize;
             }
 
-            '<' => tape.ptr -= 1,
+            b'<' => tape.ptr -= 1,
 
-            '[' => {
+            b'[' => {
                 if tape.cell[tape.ptr] != 0 {
                     tape.stack.push(i);
                 } else {
-                    let mut loop_counter = 1;
-                    while loop_counter != 0 {
+                    let mut loop_count = 1;
+                    while loop_count != 0 {
                         i += 1;
-                        if input_char(i) == '[' {
-                            loop_counter += 1;
-                        } else if input_char(i) == ']' {
-                            loop_counter -= 1;
+                        if input[i] == b'[' {
+                            loop_count += 1;
+                        } else if input[i] == b']' {
+                            loop_count -= 1;
                         }
                     }
                 }
             }
 
-            ']' => {
+            b']' => {
                 if tape.cell[tape.ptr] != 0 {
                     i = *tape.stack.last().expect("Unmatched ] character");
                 } else {
@@ -81,15 +80,15 @@ fn interpreter(input: &[u8], mut tape: Tape) {
                 }
             }
 
-            '.' => {
+            b'.' => {
                 print!("{}", tape.cell[tape.ptr] as char);
-                std::io::stdout().flush().unwrap()
+                std::io::stdout().flush().unwrap();
             }
 
-            ',' => tape.cell[tape.ptr] = std::io::stdin()
+            b',' => tape.cell[tape.ptr] = std::io::stdin()
                 .bytes().next().unwrap().unwrap() as u8,
 
-            'z' => tape.cell[tape.ptr] = 0,
+            b'z' => tape.cell[tape.ptr] = 0,
 
             _ => (),
         }
@@ -112,8 +111,8 @@ fn optimize_brainfuck(mut input: String) -> String {
     for i in (2..=9).rev() {
         for c in 0..=3 {
             input = input.replace(
-                (b"+-><"[c] as char).to_string().repeat(i).as_str(),
-                format!("{}{}", b"asrl"[c] as char, i).as_str(),
+                &"+-><".chars().nth(c).unwrap().to_string().repeat(i),
+                &format!("{}{}", "asrl".chars().nth(c).unwrap(), i),
             )
         }
     }
