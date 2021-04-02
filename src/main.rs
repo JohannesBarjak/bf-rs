@@ -108,11 +108,13 @@ fn cleanup_input(input: String) -> String {
 }
 
 fn optimize_brainfuck(mut input: String) -> String {
+    let char_mapping = [('+', 'a'), ('-', 's'), ('r', '>'), ('l', '<')];
+
     for i in (2..=9).rev() {
-        for c in 0..=3 {
+        for c in &char_mapping {
             input = input.replace(
-                &"+-><".chars().nth(c).unwrap().to_string().repeat(i),
-                &format!("{}{}", "asrl".chars().nth(c).unwrap(), i),
+                &c.0.to_string().repeat(i),
+                &format!("{}{}", c.1, i),
             )
         }
     }
