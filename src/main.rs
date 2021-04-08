@@ -16,9 +16,10 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
 
-    let input = args.get(1).expect("No input file specified");
-    let input = cleanup_input(std::fs::read_to_string(input)
-        .expect("Invalid filename"));
+    let input = args.get(1).expect("Expected one argument");
+    process_args(&input);
+
+    let input = cleanup_input(std::fs::read_to_string(input).expect("Invalid filename"));
 
     interpret(optimize_brainfuck(input).as_bytes(), tape);
 }
@@ -85,8 +86,7 @@ fn interpret(input: &[u8], mut tape: Tape) {
                 std::io::stdout().flush().unwrap();
             }
 
-            b',' => tape.cell[tape.ptr] = std::io::stdin()
-                .bytes().next().unwrap().unwrap() as u8,
+            b',' => tape.cell[tape.ptr] = std::io::stdin().bytes().next().unwrap().unwrap() as u8,
 
             b'z' => tape.cell[tape.ptr] = 0,
 
@@ -112,12 +112,29 @@ fn optimize_brainfuck(mut input: String) -> String {
 
     for i in (2..=9).rev() {
         for c in &char_mapping {
-            input = input.replace(
-                &c.0.to_string().repeat(i),
-                &format!("{}{}", c.1, i),
-            )
+            input = input.replace(&c.0.to_string().repeat(i), &format!("{}{}", c.1, i))
         }
     }
 
     input.replace("[-]", "z").replace("[+]", "z")
+}
+
+fn process_args(input: &str) {
+    if input == "-h" || input == "--help" {
+        show_help();
+        std::process::exit(0);
+    } else if input == "-v" || input == "--version" {
+        println!("bf-rs v2.1.0");
+        std::process::exit(0);
+    }
+}
+
+fn show_help() {
+    println!(
+        "Usage:
+    bf-rs [file]
+
+    -h, --help        show help
+    -v, --version     show version of bf-rs"
+    );
 }
