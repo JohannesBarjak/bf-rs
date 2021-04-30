@@ -108,7 +108,7 @@ fn cleanup_input(input: String) -> String {
 }
 
 fn optimize_brainfuck(mut input: String) -> String {
-    let char_mapping = [('+', 'a'), ('-', 's'), ('r', '>'), ('l', '<')];
+    let char_mapping = [('+', 'a'), ('-', 's'), ('>', 'r'), ('<', 'l')];
 
     for i in (2..=9).rev() {
         for c in &char_mapping {
@@ -135,6 +135,6 @@ fn show_help() {
     bf-rs [file]
 
     -h, --help        show help
-    -v, --version     show version of bf-rs"
+    -v, --version     show bf-rs version"
     );
 }
