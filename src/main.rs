@@ -1,6 +1,11 @@
 use std::io::Read;
 use std::io::Write;
 
+use std::env;
+use std::fs;
+use std::io;
+use std::process;
+
 struct Tape {
     cell: [u8; 180_000],
     stack: Vec<usize>,
@@ -14,12 +19,12 @@ fn main() {
         ptr: 90_000,
     };
 
-    let args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = env::args().collect();
 
     let input = args.get(1).expect("Expected one argument");
     process_args(&input);
 
-    let input = cleanup_input(std::fs::read_to_string(input).expect("Invalid filename"));
+    let input = cleanup_input(fs::read_to_string(input).expect("Invalid filename"));
 
     interpret(optimize_brainfuck(input).as_bytes(), tape);
 }
@@ -83,10 +88,10 @@ fn interpret(input: &[u8], mut tape: Tape) {
 
             b'.' => {
                 print!("{}", tape.cell[tape.ptr] as char);
-                std::io::stdout().flush().unwrap();
+                io::stdout().flush().unwrap();
             }
 
-            b',' => tape.cell[tape.ptr] = std::io::stdin().bytes().next().unwrap().unwrap() as u8,
+            b',' => tape.cell[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
 
             b'z' => tape.cell[tape.ptr] = 0,
 
@@ -122,10 +127,10 @@ fn optimize_brainfuck(mut input: String) -> String {
 fn process_args(input: &str) {
     if input == "-h" || input == "--help" {
         show_help();
-        std::process::exit(0);
+        process::exit(0);
     } else if input == "-v" || input == "--version" {
         println!("bf-rs v2.1.0");
-        std::process::exit(0);
+        process::exit(0);
     }
 }
 
