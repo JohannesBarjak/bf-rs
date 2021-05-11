@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::io;
 use std::process;
+use std::vec::Vec;
 
 struct Tape {
     cell: [u8; 180_000],
@@ -26,7 +27,7 @@ fn main() {
 
     let input = cleanup_input(fs::read_to_string(input).expect("Invalid filename"));
 
-    interpret(optimize_brainfuck(input).as_bytes(), tape);
+    interpret(&optimize_brainfuck(input.as_bytes().to_vec())[..], tape);
 }
 
 fn interpret(input: &[u8], mut tape: Tape) {
@@ -34,32 +35,16 @@ fn interpret(input: &[u8], mut tape: Tape) {
 
     while i < input.len() {
         match input[i] {
-            b'a' => {
-                i += 1;
-                tape.cell[tape.ptr] += input[i] - 48;
-            }
-
+            b'a' => tape.cell[tape.ptr] += get_num(input, &mut i) as u8,
             b'+' => tape.cell[tape.ptr] += 1,
 
-            b's' => {
-                i += 1;
-                tape.cell[tape.ptr] -= input[i] - 48;
-            }
-
+            b's' => tape.cell[tape.ptr] -= get_num(input, &mut i) as u8,
             b'-' => tape.cell[tape.ptr] -= 1,
 
-            b'r' => {
-                i += 1;
-                tape.ptr += (input[i] - 48) as usize;
-            }
-
+            b'r' => tape.ptr += get_num(input, &mut i),
             b'>' => tape.ptr += 1,
 
-            b'l' => {
-                i += 1;
-                tape.ptr -= (input[i] - 48) as usize;
-            }
-
+            b'l' => tape.ptr -= get_num(input, &mut i),
             b'<' => tape.ptr -= 1,
 
             b'[' => {
@@ -93,8 +78,6 @@ fn interpret(input: &[u8], mut tape: Tape) {
 
             b',' => tape.cell[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
 
-            b'z' => tape.cell[tape.ptr] = 0,
-
             _ => (),
         }
         i += 1;
@@ -112,16 +95,53 @@ fn cleanup_input(input: String) -> String {
         .collect()
 }
 
-fn optimize_brainfuck(mut input: String) -> String {
-    let char_mapping = [('+', 'a'), ('-', 's'), ('>', 'r'), ('<', 'l')];
+fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
+    let char_mapping = [(b'+', 'a'), (b'-', 's'), (b'>', 'r'), (b'<', 'l')];
+    let mut i = 0;
 
-    for i in (2..=9).rev() {
+    while i < input.len() {
         for c in &char_mapping {
-            input = input.replace(&c.0.to_string().repeat(i), &format!("{}{}", c.1, i))
+            if input[i] == c.0 {
+                let start = i;
+
+                while i < input.len() && input[i] == c.0 {
+                    i += 1;
+                }
+
+                if i - start > 1 {
+                    input.splice(
+                        start..i,
+                        format!("{}{}", c.1, i - start).as_bytes().iter().cloned(),
+                    );
+                }
+
+                i = start;
+            }
         }
+
+        i += 1;
     }
 
-    input.replace("[-]", "z").replace("[+]", "z")
+    input
+}
+
+fn get_num(input: &[u8], i: &mut usize) -> usize {
+    *i += 1;
+    let mut num = Vec::new();
+
+    while *i < input.len() && 47 < input[*i] && input[*i] < 58 {
+        num.insert(0, input[*i] - 48);
+        *i += 1;
+    }
+    *i -= 1;
+
+    let mut sum = 0;
+
+    for (exp, n) in num.into_iter().enumerate() {
+        sum += (n as usize) * (10_i32.pow(exp as u32) as usize);
+    }
+
+    sum
 }
 
 fn process_args(input: &str) {
