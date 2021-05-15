@@ -78,6 +78,8 @@ fn interpret(input: &[u8], mut tape: Tape) {
 
             b',' => tape.cell[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
 
+            b'z' => tape.cell[tape.ptr] = 0,
+
             _ => (),
         }
         i += 1;
@@ -109,13 +111,26 @@ fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
                 }
 
                 if i - start > 1 {
-                    input.splice(
-                        start..i,
-                        format!("{}{}", c.1, i - start).as_bytes().iter().cloned(),
-                    );
+                    if i - start < 10 {
+                        input.splice(
+                            start..i,
+                            format!("{}f{}", c.1, i - start).as_bytes().iter().cloned(),
+                        );
+                    } else {
+                        input.splice(
+                            start..i,
+                            format!("{}{}", c.1, i - start).as_bytes().iter().cloned(),
+                        );
+                    }
                 }
 
                 i = start;
+            } else if i < input.len() - 2
+                && input[i] == b'['
+                && (input[i + 1] == b'-' || input[i + 1] == b'+')
+                && input[i + 2] == b']'
+            {
+                input.splice(i..i + 3, [b'z'].iter().cloned());
             }
         }
 
@@ -127,21 +142,26 @@ fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
 
 fn get_num(input: &[u8], i: &mut usize) -> usize {
     *i += 1;
-    let mut num = Vec::new();
+    if input[*i] != b'f' {
+        let mut num = Vec::new();
 
-    while *i < input.len() && 47 < input[*i] && input[*i] < 58 {
-        num.insert(0, input[*i] - 48);
+        while *i < input.len() && 47 < input[*i] && input[*i] < 58 {
+            num.insert(0, input[*i] - 48);
+            *i += 1;
+        }
+        *i -= 1;
+
+        let mut sum = 0;
+
+        for (exp, n) in num.into_iter().enumerate() {
+            sum += (n as usize) * (10_i32.pow(exp as u32) as usize);
+        }
+
+        sum
+    } else {
         *i += 1;
+        (input[*i] - 48).into()
     }
-    *i -= 1;
-
-    let mut sum = 0;
-
-    for (exp, n) in num.into_iter().enumerate() {
-        sum += (n as usize) * (10_i32.pow(exp as u32) as usize);
-    }
-
-    sum
 }
 
 fn process_args(input: &str) {
@@ -149,7 +169,7 @@ fn process_args(input: &str) {
         show_help();
         process::exit(0);
     } else if input == "-v" || input == "--version" {
-        println!("bf-rs v2.1.0");
+        println!("bf-rs v3.0.0");
         process::exit(0);
     }
 }
@@ -157,7 +177,7 @@ fn process_args(input: &str) {
 fn show_help() {
     println!(
         "Usage:
-    bf-rs [file]
+    bf [file]
 
     -h, --help        show help
     -v, --version     show bf-rs version"
