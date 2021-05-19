@@ -148,10 +148,13 @@ fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
 
             if midpoint == b'-' || midpoint == b'+' {
                 input.splice(i..i + 3, [b'z'].iter().cloned());
-            } else if midpoint == b'>' {
-                input.splice(i..i + 3, [b'm', b'r'].iter().cloned());
-            } else if midpoint == b'<' {
-                input.splice(i..i + 3, [b'm', b'l'].iter().cloned());
+            } else if midpoint == b'>' || midpoint == b'<' {
+                input.splice(
+                    i..i + 3,
+                    [b'm', if midpoint == b'>' { b'r' } else { b'l' }]
+                        .iter()
+                        .cloned(),
+                );
             }
         }
 
