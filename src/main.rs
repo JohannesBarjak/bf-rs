@@ -78,6 +78,19 @@ fn interpret(input: &[u8], mut tape: Tape) {
 
             b',' => tape.cell[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
 
+            b'm' => {
+                i += 1;
+                if input[i] == b'r' {
+                    while tape.cell[tape.ptr] != 0 {
+                        tape.ptr += 1;
+                    }
+                } else if input[i] == b'l' {
+                    while tape.cell[tape.ptr] != 0 {
+                        tape.ptr -= 1;
+                    }
+                }
+            }
+
             b'z' => tape.cell[tape.ptr] = 0,
 
             _ => (),
@@ -110,27 +123,35 @@ fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
                     i += 1;
                 }
 
-                if i - start > 1 {
-                    if i - start < 10 {
+                let size = i - start;
+
+                if size > 1 {
+                    if size < 10 {
                         input.splice(
                             start..i,
-                            format!("{}f{}", c.1, i - start).as_bytes().iter().cloned(),
+                            format!("{}f{}", c.1, size).as_bytes().iter().cloned(),
                         );
                     } else {
                         input.splice(
                             start..i,
-                            format!("{}{}", c.1, i - start).as_bytes().iter().cloned(),
+                            format!("{}{}", c.1, size).as_bytes().iter().cloned(),
                         );
                     }
                 }
 
                 i = start;
-            } else if i < input.len() - 2
-                && input[i] == b'['
-                && (input[i + 1] == b'-' || input[i + 1] == b'+')
-                && input[i + 2] == b']'
-            {
+            }
+        }
+
+        if i < input.len() - 2 && input[i] == b'[' && input[i + 2] == b']' {
+            let midpoint = input[i + 1];
+
+            if midpoint == b'-' || midpoint == b'+' {
                 input.splice(i..i + 3, [b'z'].iter().cloned());
+            } else if midpoint == b'>' {
+                input.splice(i..i + 3, [b'm', b'r'].iter().cloned());
+            } else if midpoint == b'<' {
+                input.splice(i..i + 3, [b'm', b'l'].iter().cloned());
             }
         }
 
