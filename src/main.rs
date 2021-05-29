@@ -126,17 +126,13 @@ fn optimize_brainfuck(mut input: Vec<u8>) -> Vec<u8> {
                 let size = i - start;
 
                 if size > 1 {
+                    let optim_str;
                     if size < 10 {
-                        input.splice(
-                            start..i,
-                            format!("{}f{}", c.1, size).as_bytes().iter().cloned(),
-                        );
+                        optim_str = format!("{}f{}", c.1, size);
                     } else {
-                        input.splice(
-                            start..i,
-                            format!("{}{}", c.1, size).as_bytes().iter().cloned(),
-                        );
+                        optim_str = format!("{}{}", c.1, size);
                     }
+                    input.splice(start..i, optim_str.as_bytes().iter().cloned());
                 }
 
                 i = start;
