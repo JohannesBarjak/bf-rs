@@ -1,5 +1,5 @@
-use std::env;
 use bf::Tape;
+use std::env;
 
 fn main() {
     let tape = Tape {
