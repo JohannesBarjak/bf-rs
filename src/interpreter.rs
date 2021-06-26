@@ -99,3 +99,14 @@ fn get_num(input: &[u8], i: &mut usize) -> usize {
         (input[*i] - 48).into()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn num_reader_test() {
+        assert_eq!(8, get_num("af8".as_bytes(), &mut 0));
+        assert_eq!(13, get_num("a13".as_bytes(), &mut 0));
+    }
+}

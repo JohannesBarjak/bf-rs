@@ -1,6 +1,6 @@
 mod arg_parser;
-mod interpreter;
-mod optimizers;
+pub mod interpreter;
+pub mod optimizers;
 
 use std::fs;
 
