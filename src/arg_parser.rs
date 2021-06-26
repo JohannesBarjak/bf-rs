@@ -5,7 +5,7 @@ pub fn process_args(input: &str) {
         show_help();
         process::exit(0);
     } else if input == "-v" || input == "--version" {
-        println!("bf-rs v0.3.0");
+        println!("bf-rs v0.4.0");
         process::exit(0);
     }
 }
