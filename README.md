@@ -2,8 +2,17 @@
 A simple optimizing brainfuck interpreter written in rust
 ## Usage
 ```
-./bf [file]
+bf 0.5.0
+Johannes Barjak. <johannesbarja@protonmail.com>
+A brainfuck interpreter
 
--h, --help        show help
--v, --version     show bf-rs version
+USAGE:
+    bf <INPUT>
+
+ARGS:
+    <INPUT>    Brainfuck program file
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
 ```
