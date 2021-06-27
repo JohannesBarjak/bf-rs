@@ -11,13 +11,13 @@ pub struct Tape {
 }
 
 pub fn run(tape: Tape, args: Vec<String>) {
-    let input = args.get(1).expect("Expected one argument");
-    arg_parser::process_args(&input);
+    let filename = arg_parser::process_args(&args);
 
-    let input = optimizers::cleanup_input(fs::read_to_string(input).expect("Invalid filename"));
+    let program =
+        optimizers::cleanup_input(fs::read_to_string(filename).expect("Invalid filename"));
 
     interpreter::interpret(
-        &optimizers::optimize_brainfuck(input.as_bytes().to_vec())[..],
+        &optimizers::optimize_brainfuck(program.as_bytes().to_vec())[..],
         tape,
     );
 }
