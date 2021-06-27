@@ -1,9 +1,9 @@
 use clap::{App, Arg};
 
-pub fn process_args() -> String {
+pub fn get_file() -> String {
     let matches = App::new("bf")
         .version("0.5.0")
-        .author("Johannes Barjak. <johannesbarja@protonmail.com>")
+        .author("Johannes B. <johannesbarja@protonmail.com>")
         .about("A brainfuck interpreter")
         .arg(
             Arg::new("INPUT")

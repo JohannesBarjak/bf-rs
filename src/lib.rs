@@ -1,4 +1,4 @@
-mod arg_parser;
+mod clap;
 pub mod interpreter;
 pub mod optimizers;
 
@@ -11,7 +11,7 @@ pub struct Tape {
 }
 
 pub fn run(tape: Tape) {
-    let file = arg_parser::process_args();
+    let file = clap::get_file();
 
     let program = optimizers::cleanup_input(fs::read_to_string(file).expect("Invalid filename"));
 

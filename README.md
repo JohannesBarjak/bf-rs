@@ -3,7 +3,7 @@ A simple optimizing brainfuck interpreter written in rust
 ## Usage
 ```
 bf 0.5.0
-Johannes Barjak. <johannesbarja@protonmail.com>
+Johannes B. <johannesbarja@protonmail.com>
 A brainfuck interpreter
 
 USAGE:
