@@ -2,7 +2,7 @@ use clap::{App, Arg};
 
 pub fn process_args() -> String {
     let matches = App::new("bf")
-        .version("0.4.5")
+        .version("0.5.0")
         .author("Johannes Barjak. <johannesbarja@protonmail.com>")
         .about("A brainfuck interpreter")
         .arg(
