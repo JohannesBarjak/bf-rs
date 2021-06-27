@@ -1,5 +1,4 @@
 use bf::Tape;
-use std::env;
 
 fn main() {
     let tape = Tape {
@@ -8,7 +7,5 @@ fn main() {
         ptr: 90_000,
     };
 
-    let args: Vec<String> = env::args().collect();
-
-    bf::run(tape, args);
+    bf::run(tape);
 }

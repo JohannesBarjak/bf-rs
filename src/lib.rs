@@ -10,11 +10,10 @@ pub struct Tape {
     pub ptr: usize,
 }
 
-pub fn run(tape: Tape, args: Vec<String>) {
-    let filename = arg_parser::process_args(&args);
+pub fn run(tape: Tape) {
+    let file = arg_parser::process_args();
 
-    let program =
-        optimizers::cleanup_input(fs::read_to_string(filename).expect("Invalid filename"));
+    let program = optimizers::cleanup_input(fs::read_to_string(file).expect("Invalid filename"));
 
     interpreter::interpret(
         &optimizers::optimize_brainfuck(program.as_bytes().to_vec())[..],

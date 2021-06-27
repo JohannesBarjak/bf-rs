@@ -1,24 +1,17 @@
-use std::process;
+use clap::{App, Arg};
 
-pub fn process_args(args: &[String]) -> String {
-    let first = args.get(1).expect("Please provide a argument");
-    if first == "-h" || first == "--help" {
-        show_help();
-        process::exit(0);
-    } else if first == "-v" || first == "--version" {
-        println!("bf-rs v0.4.5");
-        process::exit(0);
-    }
+pub fn process_args() -> String {
+    let matches = App::new("bf")
+        .version("0.4.5")
+        .author("Johannes Barjak. <johannesbarja@protonmail.com>")
+        .about("A brainfuck interpreter")
+        .arg(
+            Arg::new("INPUT")
+                .about("Brainfuck program file")
+                .required(true)
+                .index(1),
+        )
+        .get_matches();
 
-    first.to_string()
-}
-
-fn show_help() {
-    println!(
-        "Usage:
-    bf [file]
-
-    -h, --help        show help
-    -v, --version     show bf-rs version"
-    );
+    matches.value_of("INPUT").unwrap().to_string()
 }
