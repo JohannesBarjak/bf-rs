@@ -1,10 +1,12 @@
 use bf::Tape;
 
+const MEMORY_SIZE: usize = 180_000;
+
 fn main() {
     let tape = Tape {
-        cell: [0; 180_000],
+        memory: [0; MEMORY_SIZE],
         stack: Vec::new(),
-        ptr: 90_000,
+        ptr: MEMORY_SIZE / 2,
     };
 
     bf::run(tape);

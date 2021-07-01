@@ -8,11 +8,11 @@ pub fn interpret(program: &[u8], mut tape: Tape) {
 
     while i < program.len() {
         match program[i] {
-            b'a' => tape.cell[tape.ptr] += get_num(program, &mut i) as u8,
-            b'+' => tape.cell[tape.ptr] += 1,
+            b'a' => tape.memory[tape.ptr] += get_num(program, &mut i) as u8,
+            b'+' => tape.memory[tape.ptr] += 1,
 
-            b's' => tape.cell[tape.ptr] -= get_num(program, &mut i) as u8,
-            b'-' => tape.cell[tape.ptr] -= 1,
+            b's' => tape.memory[tape.ptr] -= get_num(program, &mut i) as u8,
+            b'-' => tape.memory[tape.ptr] -= 1,
 
             b'r' => tape.ptr += get_num(program, &mut i),
             b'>' => tape.ptr += 1,
@@ -21,7 +21,7 @@ pub fn interpret(program: &[u8], mut tape: Tape) {
             b'<' => tape.ptr -= 1,
 
             b'[' => {
-                if tape.cell[tape.ptr] != 0 {
+                if tape.memory[tape.ptr] != 0 {
                     tape.stack.push(i);
                 } else {
                     let mut loop_count = 1;
@@ -37,7 +37,7 @@ pub fn interpret(program: &[u8], mut tape: Tape) {
             }
 
             b']' => {
-                if tape.cell[tape.ptr] != 0 {
+                if tape.memory[tape.ptr] != 0 {
                     i = *tape.stack.last().expect("Unmatched ] character");
                 } else {
                     tape.stack.pop().expect("Unmatched ] character");
@@ -45,26 +45,26 @@ pub fn interpret(program: &[u8], mut tape: Tape) {
             }
 
             b'.' => {
-                print!("{}", tape.cell[tape.ptr] as char);
+                print!("{}", tape.memory[tape.ptr] as char);
                 io::stdout().flush().unwrap();
             }
 
-            b',' => tape.cell[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
+            b',' => tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8,
 
             b'm' => {
                 i += 1;
                 if program[i] == b'r' {
-                    while tape.cell[tape.ptr] != 0 {
+                    while tape.memory[tape.ptr] != 0 {
                         tape.ptr += 1;
                     }
                 } else if program[i] == b'l' {
-                    while tape.cell[tape.ptr] != 0 {
+                    while tape.memory[tape.ptr] != 0 {
                         tape.ptr -= 1;
                     }
                 }
             }
 
-            b'z' => tape.cell[tape.ptr] = 0,
+            b'z' => tape.memory[tape.ptr] = 0,
 
             _ => (),
         }

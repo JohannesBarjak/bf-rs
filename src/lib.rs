@@ -5,7 +5,7 @@ pub mod optimizers;
 use std::fs;
 
 pub struct Tape {
-    pub cell: [u8; 180_000],
+    pub memory: [u8; 180_000],
     pub stack: Vec<usize>,
     pub ptr: usize,
 }
