@@ -1,22 +1,16 @@
-mod clap;
 pub mod interpreter;
-pub mod optimizers;
+pub mod opcodes;
+pub mod parser;
 
 use std::fs;
+pub const MEMORY_SIZE: usize = 180_000;
 
 pub struct Tape {
-    pub memory: [u8; 180_000],
-    pub stack: Vec<usize>,
+    pub memory: [u8; MEMORY_SIZE],
     pub ptr: usize,
 }
 
-pub fn run(tape: Tape) {
-    let file = clap::get_file();
-
-    let program = optimizers::cleanup_input(fs::read_to_string(file).expect("Invalid filename"));
-
-    interpreter::interpret(
-        &optimizers::optimize_brainfuck(program.as_bytes().to_vec())[..],
-        tape,
-    );
+pub fn run(tape: Tape, file: String) {
+    let input = parser::parse_input(fs::read_to_string(file).expect("Invalid filename"));
+    interpreter::interpret(input, tape);
 }

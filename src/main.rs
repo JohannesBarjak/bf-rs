@@ -1,13 +1,14 @@
-use bf::Tape;
+mod clap;
 
-const MEMORY_SIZE: usize = 180_000;
+use bf::Tape;
+use bf::MEMORY_SIZE;
 
 fn main() {
     let tape = Tape {
         memory: [0; MEMORY_SIZE],
-        stack: Vec::new(),
         ptr: MEMORY_SIZE / 2,
     };
 
-    bf::run(tape);
+    let file = clap::get_file();
+    bf::run(tape, file);
 }
