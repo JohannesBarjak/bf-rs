@@ -4,6 +4,7 @@
 </p>
 A optimizing brainfuck interpreter written in rust
 ## Usage
+
 ```
 bf 0.5.0
 Johannes B. <johannesbarja@protonmail.com>
