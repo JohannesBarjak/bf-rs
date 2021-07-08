@@ -2,7 +2,7 @@ use clap::{App, Arg};
 
 pub fn get_file() -> String {
     let matches = App::new("bf")
-        .version("0.5.0")
+        .version("0.6.0")
         .author("Johannes B. <johannesbarja@protonmail.com>")
         .about("A brainfuck interpreter")
         .arg(

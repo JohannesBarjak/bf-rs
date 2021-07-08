@@ -7,7 +7,7 @@ A optimizing brainfuck interpreter written in rust
 ## Usage
 
 ```
-bf 0.5.0
+bf 0.6.0
 Johannes B. <johannesbarja@protonmail.com>
 A brainfuck interpreter
 
