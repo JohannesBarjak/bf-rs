@@ -3,6 +3,7 @@
 	<a href="https://opensource.org/licenses/MPL-2.0"><img src="https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg"></a>
 </p>
 A optimizing brainfuck interpreter written in rust
+
 ## Usage
 
 ```
