@@ -1,5 +1,5 @@
 #[derive(PartialEq, Clone)]
-pub enum Token {
+pub enum Opcode {
     Add(u8),
     Substract(u8),
     MovePtrRight(usize),

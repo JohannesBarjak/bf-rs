@@ -1,42 +1,42 @@
-use crate::tokens::Token;
-use crate::Tape;
+use crate::instructions::Opcode;
+use crate::tape::Tape;
 
 use std::io;
 use std::io::{Read, Write};
 
-pub fn interpret(input: Vec<Token>, mut tape: Tape) {
+pub fn interpret(input: Vec<Opcode>, mut tape: Tape) {
     let mut i = 0;
 
     while i < input.len() {
         match input[i] {
-            Token::Add(n) => tape.memory[tape.ptr] += n,
-            Token::Substract(n) => tape.memory[tape.ptr] -= n,
+            Opcode::Add(n) => tape.memory[tape.ptr] += n,
+            Opcode::Substract(n) => tape.memory[tape.ptr] -= n,
 
-            Token::MovePtrRight(n) => tape.ptr += n,
-            Token::MovePtrLeft(n) => tape.ptr -= n,
+            Opcode::MovePtrRight(n) => tape.ptr += n,
+            Opcode::MovePtrLeft(n) => tape.ptr -= n,
 
-            Token::LoopStart { loop_end_addr } => {
+            Opcode::LoopStart { loop_end_addr } => {
                 if tape.memory[tape.ptr] == 0 {
                     i = loop_end_addr;
                 }
             }
 
-            Token::LoopEnd { loop_start_addr } => {
+            Opcode::LoopEnd { loop_start_addr } => {
                 if tape.memory[tape.ptr] != 0 {
                     i = loop_start_addr;
                 }
             }
 
-            Token::PrintChar => {
+            Opcode::PrintChar => {
                 print!("{}", tape.memory[tape.ptr] as char);
                 io::stdout().flush().unwrap();
             }
 
-            Token::ReadChar => {
+            Opcode::ReadChar => {
                 tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8
             }
 
-            Token::SetToZero => tape.memory[tape.ptr] = 0,
+            Opcode::SetToZero => tape.memory[tape.ptr] = 0,
 
             _ => unreachable!(),
         }

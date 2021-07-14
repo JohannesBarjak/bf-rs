@@ -1,13 +1,9 @@
 mod clap;
 
-use bf::Tape;
-use bf::MEMORY_SIZE;
+use bf::tape::Tape;
 
 fn main() {
-    let tape = Tape {
-        memory: [0; MEMORY_SIZE],
-        ptr: MEMORY_SIZE / 2,
-    };
+    let tape = Tape::new();
 
     let file = clap::get_file();
     bf::run(tape, file);

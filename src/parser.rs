@@ -2,9 +2,9 @@ use std::mem::discriminant;
 
 mod optimizer;
 
-use crate::tokens::Token;
+use crate::instructions::Opcode;
 
-pub fn tokenize(input: String) -> Vec<Token> {
+pub fn parse(input: String) -> Vec<Opcode> {
     let input = sanitize(input).as_bytes().to_vec();
     let mut tokenized_input = Vec::new();
 
@@ -22,10 +22,10 @@ pub fn tokenize(input: String) -> Vec<Token> {
                 let size = i - start;
 
                 match *c {
-                    b'+' => tokenized_input.push(Token::Add(size as u8)),
-                    b'-' => tokenized_input.push(Token::Substract(size as u8)),
-                    b'>' => tokenized_input.push(Token::MovePtrRight(size)),
-                    b'<' => tokenized_input.push(Token::MovePtrLeft(size)),
+                    b'+' => tokenized_input.push(Opcode::Add(size as u8)),
+                    b'-' => tokenized_input.push(Opcode::Substract(size as u8)),
+                    b'>' => tokenized_input.push(Opcode::MovePtrRight(size)),
+                    b'<' => tokenized_input.push(Opcode::MovePtrLeft(size)),
                     _ => unreachable!(),
                 }
 
@@ -34,10 +34,10 @@ pub fn tokenize(input: String) -> Vec<Token> {
         }
 
         match input[i] {
-            b'[' => tokenized_input.push(Token::LoopStartPlaceholder),
-            b']' => tokenized_input.push(Token::LoopEndPlaceholder),
-            b'.' => tokenized_input.push(Token::PrintChar),
-            b',' => tokenized_input.push(Token::ReadChar),
+            b'[' => tokenized_input.push(Opcode::LoopStartPlaceholder),
+            b']' => tokenized_input.push(Opcode::LoopEndPlaceholder),
+            b'.' => tokenized_input.push(Opcode::PrintChar),
+            b',' => tokenized_input.push(Opcode::ReadChar),
             _ => (),
         }
 
@@ -74,9 +74,9 @@ pub fn tokenize(input: String) -> Vec<Token> {
             }
 
             if is_loop_start(&tokenized_input, &start) {
-                tokenized_input[start] = Token::LoopStart { loop_end_addr: i };
+                tokenized_input[start] = Opcode::LoopStart { loop_end_addr: i };
             } else if is_loop_end(&tokenized_input, &start) {
-                tokenized_input[start] = Token::LoopEnd { loop_start_addr: i };
+                tokenized_input[start] = Opcode::LoopEnd { loop_start_addr: i };
             }
 
             i = start;
@@ -95,12 +95,12 @@ fn sanitize(input: String) -> String {
         .collect()
 }
 
-fn is_loop_start(input: &[Token], i: &usize) -> bool {
-    input[*i] == Token::LoopStartPlaceholder
-        || discriminant(&input[*i]) == discriminant(&Token::LoopStart { loop_end_addr: 1 })
+fn is_loop_start(input: &[Opcode], i: &usize) -> bool {
+    input[*i] == Opcode::LoopStartPlaceholder
+        || discriminant(&input[*i]) == discriminant(&Opcode::LoopStart { loop_end_addr: 1 })
 }
 
-fn is_loop_end(input: &[Token], i: &usize) -> bool {
-    input[*i] == Token::LoopEndPlaceholder
-        || discriminant(&input[*i]) == discriminant(&Token::LoopEnd { loop_start_addr: 1 })
+fn is_loop_end(input: &[Opcode], i: &usize) -> bool {
+    input[*i] == Opcode::LoopEndPlaceholder
+        || discriminant(&input[*i]) == discriminant(&Opcode::LoopEnd { loop_start_addr: 1 })
 }
