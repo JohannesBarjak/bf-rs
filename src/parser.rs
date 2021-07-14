@@ -6,7 +6,7 @@ use crate::instructions::Opcode;
 
 pub fn parse(input: String) -> Vec<Opcode> {
     let input = sanitize(input).as_bytes().to_vec();
-    let mut tokenized_input = Vec::new();
+    let mut output = Vec::new();
 
     let mut i = 0;
 
@@ -22,10 +22,10 @@ pub fn parse(input: String) -> Vec<Opcode> {
                 let size = i - start;
 
                 match *c {
-                    b'+' => tokenized_input.push(Opcode::Add(size as u8)),
-                    b'-' => tokenized_input.push(Opcode::Substract(size as u8)),
-                    b'>' => tokenized_input.push(Opcode::MovePtrRight(size)),
-                    b'<' => tokenized_input.push(Opcode::MovePtrLeft(size)),
+                    b'+' => output.push(Opcode::Add(size as u8)),
+                    b'-' => output.push(Opcode::Substract(size as u8)),
+                    b'>' => output.push(Opcode::MovePtrRight(size)),
+                    b'<' => output.push(Opcode::MovePtrLeft(size)),
                     _ => unreachable!(),
                 }
 
@@ -34,49 +34,49 @@ pub fn parse(input: String) -> Vec<Opcode> {
         }
 
         match input[i] {
-            b'[' => tokenized_input.push(Opcode::LoopStartPlaceholder),
-            b']' => tokenized_input.push(Opcode::LoopEndPlaceholder),
-            b'.' => tokenized_input.push(Opcode::PrintChar),
-            b',' => tokenized_input.push(Opcode::ReadChar),
+            b'[' => output.push(Opcode::LoopStartPlaceholder),
+            b']' => output.push(Opcode::LoopEndPlaceholder),
+            b'.' => output.push(Opcode::PrintChar),
+            b',' => output.push(Opcode::ReadChar),
             _ => (),
         }
 
         i += 1;
     }
 
-    optimizer::optimize(&mut tokenized_input);
+    optimizer::optimize(&mut output);
 
     let mut i = 0;
 
-    while i < tokenized_input.len() {
-        if is_loop_start(&tokenized_input, &i) || is_loop_end(&tokenized_input, &i) {
+    while i < output.len() {
+        if is_loop_start(&output, &i) || is_loop_end(&output, &i) {
             let mut loop_count = 1;
             let start = i;
 
-            if is_loop_start(&tokenized_input, &i) {
+            if is_loop_start(&output, &i) {
                 while loop_count != 0 {
                     i += 1;
-                    if is_loop_start(&tokenized_input, &i) {
+                    if is_loop_start(&output, &i) {
                         loop_count += 1;
-                    } else if is_loop_end(&tokenized_input, &i) {
+                    } else if is_loop_end(&output, &i) {
                         loop_count -= 1;
                     }
                 }
-            } else if is_loop_end(&tokenized_input, &i) {
+            } else if is_loop_end(&output, &i) {
                 while loop_count != 0 {
                     i -= 1;
-                    if is_loop_start(&tokenized_input, &i) {
+                    if is_loop_start(&output, &i) {
                         loop_count -= 1
-                    } else if is_loop_end(&tokenized_input, &i) {
+                    } else if is_loop_end(&output, &i) {
                         loop_count += 1;
                     }
                 }
             }
 
-            if is_loop_start(&tokenized_input, &start) {
-                tokenized_input[start] = Opcode::LoopStart { loop_end_addr: i };
-            } else if is_loop_end(&tokenized_input, &start) {
-                tokenized_input[start] = Opcode::LoopEnd { loop_start_addr: i };
+            if is_loop_start(&output, &start) {
+                output[start] = Opcode::LoopStart { loop_end_addr: i };
+            } else if is_loop_end(&output, &start) {
+                output[start] = Opcode::LoopEnd { loop_start_addr: i };
             }
 
             i = start;
@@ -85,7 +85,7 @@ pub fn parse(input: String) -> Vec<Opcode> {
         i += 1;
     }
 
-    tokenized_input
+    output
 }
 
 fn sanitize(input: String) -> String {
