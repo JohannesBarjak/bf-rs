@@ -1,12 +1,6 @@
 pub mod instructions;
 pub mod interpreter;
 pub mod parser;
-pub mod tape;
+pub mod transpiler;
 
-use crate::tape::Tape;
-use std::fs;
-
-pub fn run(tape: Tape, file: String) {
-    let input = parser::parse(fs::read_to_string(file).expect("Invalid filename"));
-    interpreter::interpret(input, tape);
-}
+pub const MEMORY_SIZE: usize = 180_000;
