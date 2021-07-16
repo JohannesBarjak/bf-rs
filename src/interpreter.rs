@@ -1,10 +1,20 @@
 use crate::instructions::Opcode;
-use crate::tape::Tape;
+use crate::MEMORY_SIZE;
 
 use std::io;
 use std::io::{Read, Write};
 
-pub fn interpret(input: Vec<Opcode>, mut tape: Tape) {
+pub struct Tape {
+    pub memory: [u8; MEMORY_SIZE],
+    pub ptr: usize,
+}
+
+pub fn interpret(input: Vec<Opcode>) {
+    let mut tape = Tape {
+        memory: [0; MEMORY_SIZE],
+        ptr: MEMORY_SIZE / 2,
+    };
+
     let mut i = 0;
 
     while i < input.len() {
