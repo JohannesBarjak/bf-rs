@@ -8,7 +8,7 @@ use std::path::Path;
 
 fn main() {
     let matches = App::new("bf")
-        .version("0.6.3")
+        .version("0.7.0")
         .author("Johannes B. <johannesbarja@protonmail.com>")
         .about("A brainfuck interpreter")
         .arg(
