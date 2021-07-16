@@ -37,12 +37,10 @@ pub fn interpret(input: Vec<Opcode>) {
                 }
             }
 
-            Opcode::PrintChar => {
-                print!("{}", tape.memory[tape.ptr] as char);
-                io::stdout().flush().unwrap();
-            }
+            Opcode::PrintChar => print!("{}", tape.memory[tape.ptr] as char),
 
             Opcode::ReadChar => {
+                io::stdout().flush().unwrap();
                 tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8
             }
 
