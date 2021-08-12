@@ -1,14 +1,9 @@
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 pub enum Opcode {
-    Add(u8),
-    Substract(u8),
-    MovePtrRight(usize),
-    MovePtrLeft(usize),
-    LoopStart { loop_end_addr: usize },
-    LoopStartPlaceholder,
-    LoopEnd { loop_start_addr: usize },
-    LoopEndPlaceholder,
+    Add(isize),
+    Move(isize),
+    LoopStart(usize),
+    LoopEnd(usize),
     PrintChar,
     ReadChar,
-    SetToZero,
 }

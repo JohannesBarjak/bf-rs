@@ -1,5 +1,6 @@
 use bf::interpreter;
 use bf::parser;
+use bf::tokenizer;
 use bf::transpiler;
 use clap::{App, Arg};
 
@@ -26,17 +27,18 @@ fn main() {
 
     match matches.value_of("INPUT") {
         Some(file) => {
-            let input = parser::parse(fs::read_to_string(file).unwrap());
+            let instructions =
+                parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
 
             if matches.is_present("interpret") {
-                interpreter::interpret(input);
+                interpreter::interpret(instructions);
             } else {
                 fs::write(
                     format!(
                         "{}.c",
                         Path::new(file).file_stem().unwrap().to_str().unwrap()
                     ),
-                    transpiler::transpile(input),
+                    transpiler::transpile(instructions),
                 )
                 .unwrap();
             }

@@ -1,81 +1,56 @@
-mod optimizer;
-
 use crate::instructions::Opcode;
+use crate::tokens::Token;
 
-pub fn parse(input: String) -> Vec<Opcode> {
-    let mut output = Vec::new();
+#[must_use]
+pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
+    let (mut loop_stack, mut instructions) = (Vec::new(), Vec::new());
 
-    {
-        let input = remove_comments(input).as_bytes().to_vec();
-        let mut i = 0;
+    let mut i = 0;
 
-        while i < input.len() {
-            for c in b"+-><" {
-                if input[i] == *c {
-                    let start = i;
+    while i < tokens.len() {
+        match tokens[i] {
+            Token::Add | Token::Sub => {
+                let mut value = 0;
 
-                    while i < input.len() && input[i] == *c {
-                        i += 1;
-                    }
-
-                    let size = i - start;
-
-                    match *c {
-                        b'+' => output.push(Opcode::Add(size as u8)),
-                        b'-' => output.push(Opcode::Substract(size as u8)),
-                        b'>' => output.push(Opcode::MovePtrRight(size)),
-                        b'<' => output.push(Opcode::MovePtrLeft(size)),
-                        _ => unreachable!(),
-                    }
-
-                    i -= 1;
-                }
-            }
-
-            match input[i] {
-                b'[' => output.push(Opcode::LoopStartPlaceholder),
-                b']' => output.push(Opcode::LoopEndPlaceholder),
-                b'.' => output.push(Opcode::PrintChar),
-                b',' => output.push(Opcode::ReadChar),
-                _ => (),
-            }
-
-            i += 1;
-        }
-    }
-
-    optimizer::optimize(&mut output);
-
-    {
-        let mut stack = Vec::new();
-        let mut i = 0;
-
-        while i < output.len() {
-            match output[i] {
-                Opcode::LoopStartPlaceholder => stack.push(i),
-                Opcode::LoopEndPlaceholder => {
-                    let loop_start = stack.pop().unwrap();
-
-                    output[i] = Opcode::LoopEnd {
-                        loop_start_addr: loop_start,
-                    };
-
-                    output[loop_start] = Opcode::LoopStart { loop_end_addr: i };
+                while matches!(tokens.get(i), Some(Token::Add | Token::Sub)) {
+                    value += if tokens[i] == Token::Add { 1 } else { -1 };
+                    i += 1;
                 }
 
-                _ => (),
+                instructions.push(Opcode::Add(value));
+                i -= 1;
             }
 
-            i += 1;
+            Token::MoveRight | Token::MoveLeft => {
+                let mut value = 0;
+
+                while matches!(tokens.get(i), Some(Token::MoveRight | Token::MoveLeft)) {
+                    value += if tokens[i] == Token::MoveRight { 1 } else { -1 };
+                    i += 1;
+                }
+
+                instructions.push(Opcode::Move(value));
+                i -= 1;
+            }
+
+            Token::LoopStart => {
+                loop_stack.push(instructions.len());
+                instructions.push(Opcode::LoopStart(0));
+            }
+
+            Token::LoopEnd => {
+                let loop_start = loop_stack.pop().expect("unmatched `[`");
+
+                instructions[loop_start] = Opcode::LoopStart(instructions.len());
+                instructions.push(Opcode::LoopEnd(loop_start));
+            }
+
+            Token::PrintChar => instructions.push(Opcode::PrintChar),
+            Token::ReadChar => instructions.push(Opcode::ReadChar),
         }
+
+        i += 1;
     }
 
-    output
-}
-
-fn remove_comments(input: String) -> String {
-    input
-        .chars()
-        .filter(|i| "+-><[].,".chars().any(|c| c == *i))
-        .collect()
+    instructions
 }
