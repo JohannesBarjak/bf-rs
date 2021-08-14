@@ -2,28 +2,20 @@ use bf::interpreter;
 use bf::parser;
 use bf::tokenizer;
 use bf::transpiler;
-use clap::{App, Arg};
+use clap::clap_app;
 
 use std::fs;
 use std::path::Path;
 
 fn main() {
-    let matches = App::new("bf")
-        .version("0.8.0")
-        .author("Johannes B. <johannesbarja@protonmail.com>")
-        .about("A brainfuck interpreter")
-        .arg(
-            Arg::new("INPUT")
-                .about("Brainfuck program file")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            Arg::new("interpret")
-                .short('i')
-                .about("Interpret the program instead of transpiling it"),
-        )
-        .get_matches();
+    let matches = clap_app!(bf =>
+        (version: "0.8.0")
+        (author: "Johannes B. <johannesbarja@protonmail.com>")
+        (about: "A brainfuck interpreter")
+        (@arg INPUT: +required "Brainfuck program file")
+        (@arg interpret: -i "Interpret the program instead of transpiling it")
+    )
+    .get_matches();
 
     match matches.value_of("INPUT") {
         Some(file) => {
