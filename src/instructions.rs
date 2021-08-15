@@ -6,4 +6,5 @@ pub enum Opcode {
     LoopEnd(usize),
     PrintChar,
     ReadChar,
+    Clear,
 }

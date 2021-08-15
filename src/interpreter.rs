@@ -40,6 +40,8 @@ pub fn interpret(instructions: Vec<Opcode>) {
                 io::stdout().flush().unwrap();
                 tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8;
             }
+
+            Opcode::Clear => tape.memory[tape.ptr] = 0,
         }
 
         i += 1;

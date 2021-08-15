@@ -21,6 +21,8 @@ pub fn transpile(instructions: Vec<Opcode>) -> String {
 
             Opcode::PrintChar => output.push_str("    putchar(*ptr);\n"),
             Opcode::ReadChar => output.push_str("    *ptr = getchar();\n"),
+
+            Opcode::Clear => output.push_str("    *ptr = 0;\n"),
         }
     }
 

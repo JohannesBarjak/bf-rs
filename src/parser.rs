@@ -34,8 +34,15 @@ pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
             }
 
             Token::LoopStart => {
-                loop_stack.push(instructions.len());
-                instructions.push(Opcode::LoopStart(0));
+                if tokens.get(i + 2) == Some(&Token::LoopEnd)
+                    && matches!(tokens[i + 1], Token::Add | Token::Sub)
+                {
+                    instructions.push(Opcode::Clear);
+                    i += 2;
+                } else {
+                    loop_stack.push(instructions.len());
+                    instructions.push(Opcode::LoopStart(0));
+                }
             }
 
             Token::LoopEnd => {
