@@ -5,10 +5,10 @@ use crate::MEMORY_SIZE;
 pub fn transpile(instructions: Vec<Opcode>) -> String {
     let mut output = format!(
         "{}{}{}{}",
-        "#include<stdio.h>\n\nint main() {",
-        format!("    char memory[{}] = {{0}};", MEMORY_SIZE),
-        "    char *ptr = memory;",
-        format!("ptr += {};\n\n", MEMORY_SIZE / 2)
+        "#include<stdio.h>\n\nint main() {\n",
+        format!("    char memory[{}] = {{0}};\n", MEMORY_SIZE),
+        "    char *ptr = memory;\n",
+        format!("    ptr += {};\n\n", MEMORY_SIZE / 2)
     );
 
     for opcode in instructions {
