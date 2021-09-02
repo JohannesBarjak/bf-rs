@@ -19,8 +19,8 @@ pub fn interpret(instructions: Vec<Opcode>) {
 
     while i < instructions.len() {
         match instructions[i] {
-            Opcode::Add(n) => tape.memory[tape.ptr] += n as u8,
-            Opcode::Move(n) => tape.ptr += n as usize,
+            Opcode::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(n as u8),
+            Opcode::Move(n) => tape.ptr = tape.ptr.wrapping_add(n as usize),
 
             Opcode::LoopStart(loop_end_addr) => {
                 if tape.memory[tape.ptr] == 0 {
