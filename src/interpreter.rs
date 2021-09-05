@@ -5,8 +5,8 @@ use std::io;
 use std::io::{Read, Write};
 
 pub struct Tape {
-    pub memory: [u8; MEMORY_SIZE],
-    pub ptr: usize,
+    memory: [u8; MEMORY_SIZE],
+    ptr: usize,
 }
 
 impl Tape {
