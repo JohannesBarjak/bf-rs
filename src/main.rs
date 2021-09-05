@@ -10,7 +10,7 @@ use std::path::Path;
 
 fn main() {
     let matches = clap_app!(bf =>
-        (version: "0.8.0")
+        (version: "0.8.1")
         (author: "Johannes B. <johannesbarja@protonmail.com>")
         (about: "A brainfuck interpreter")
         (@arg INPUT: +required "Brainfuck program file")
