@@ -1,4 +1,5 @@
 use bf::interpreter;
+use bf::interpreter::Tape;
 use bf::parser;
 use bf::tokenizer;
 use bf::transpiler;
@@ -23,7 +24,7 @@ fn main() {
                 parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
 
             if matches.is_present("interpret") {
-                interpreter::interpret(instructions);
+                interpreter::interpret(instructions, &mut Tape::new());
             } else {
                 fs::write(
                     format!(

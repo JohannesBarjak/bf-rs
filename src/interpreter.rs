@@ -9,12 +9,23 @@ pub struct Tape {
     pub ptr: usize,
 }
 
-pub fn interpret(instructions: Vec<Opcode>) {
-    let mut tape = Tape {
-        memory: [0; MEMORY_SIZE],
-        ptr: MEMORY_SIZE / 2,
-    };
+impl Tape {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 
+impl Default for Tape {
+    fn default() -> Self {
+        Self {
+            memory: [0; MEMORY_SIZE],
+            ptr: MEMORY_SIZE / 2,
+        }
+    }
+}
+
+pub fn interpret(instructions: Vec<Opcode>, tape: &mut Tape) {
     let mut i = 0;
 
     while i < instructions.len() {
