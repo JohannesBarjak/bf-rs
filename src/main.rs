@@ -24,7 +24,7 @@ fn main() {
                 parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
 
             if matches.is_present("interpret") {
-                interpreter::interpret(instructions, &mut Tape::new());
+                interpreter::interpret(&instructions, &mut Tape::new());
             } else {
                 fs::write(
                     format!(

@@ -1,9 +1,8 @@
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Opcode {
     Add(isize),
     Move(isize),
-    LoopStart(usize),
-    LoopEnd(usize),
+    Loop(Vec<Opcode>),
     PrintChar,
     ReadChar,
     Clear,

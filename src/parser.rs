@@ -34,22 +34,15 @@ pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
             }
 
             Token::LoopStart => {
-                if tokens.get(i + 2) == Some(&Token::LoopEnd)
-                    && matches!(tokens[i + 1], Token::Add | Token::Sub)
-                {
-                    instructions.push(Opcode::Clear);
-                    i += 2;
-                } else {
-                    loop_stack.push(instructions.len());
-                    instructions.push(Opcode::LoopStart(0));
-                }
+                instructions.push(Opcode::Loop(Vec::new()));
+                loop_stack.push(instructions.len());
             }
 
             Token::LoopEnd => {
                 let loop_start = loop_stack.pop().expect("unmatched `[`");
 
-                instructions[loop_start] = Opcode::LoopStart(instructions.len());
-                instructions.push(Opcode::LoopEnd(loop_start));
+                let loop_body = instructions.split_off(loop_start);
+                *instructions.last_mut().unwrap() = Opcode::Loop(loop_body);
             }
 
             Token::PrintChar => instructions.push(Opcode::PrintChar),

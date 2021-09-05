@@ -25,23 +25,17 @@ impl Default for Tape {
     }
 }
 
-pub fn interpret(instructions: Vec<Opcode>, tape: &mut Tape) {
+pub fn interpret(instructions: &[Opcode], tape: &mut Tape) {
     let mut i = 0;
 
     while i < instructions.len() {
-        match instructions[i] {
-            Opcode::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(n as u8),
-            Opcode::Move(n) => tape.ptr = tape.ptr.wrapping_add(n as usize),
+        match &instructions[i] {
+            Opcode::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(*n as u8),
+            Opcode::Move(n) => tape.ptr = tape.ptr.wrapping_add(*n as usize),
 
-            Opcode::LoopStart(loop_end_addr) => {
-                if tape.memory[tape.ptr] == 0 {
-                    i = loop_end_addr;
-                }
-            }
-
-            Opcode::LoopEnd(loop_start_addr) => {
-                if tape.memory[tape.ptr] != 0 {
-                    i = loop_start_addr;
+            Opcode::Loop(loop_body) => {
+                while tape.memory[tape.ptr] != 0 {
+                    interpret(loop_body, tape);
                 }
             }
 

@@ -27,8 +27,11 @@ fn transpile_instructions(instructions: Vec<Opcode>, output: &mut String) {
             Opcode::Add(n) => output.push_str(format!("    *ptr += {};\n", n as u8).as_str()),
             Opcode::Move(n) => output.push_str(format!("    ptr += {};\n", n).as_str()),
 
-            Opcode::LoopStart(_) => output.push_str("    while(*ptr) {\n"),
-            Opcode::LoopEnd(_) => output.push_str("    }\n"),
+            Opcode::Loop(loop_body) => {
+                output.push_str("    while(*ptr) {\n");
+                transpile_instructions(loop_body, output);
+                output.push_str("    }\n");
+            }
 
             Opcode::PrintChar => output.push_str("    putchar(*ptr);\n"),
             Opcode::ReadChar => output.push_str("    *ptr = getchar();\n"),
