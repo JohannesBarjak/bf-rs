@@ -1,5 +1,6 @@
 use bf::interpreter;
 use bf::interpreter::Tape;
+use bf::optimizer;
 use bf::parser;
 use bf::tokenizer;
 use bf::transpiler;
@@ -20,8 +21,9 @@ fn main() {
 
     match matches.value_of("INPUT") {
         Some(file) => {
-            let instructions =
+            let mut instructions =
                 parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
+            optimizer::optimize(&mut instructions);
 
             if matches.is_present("interpret") {
                 interpreter::interpret(&instructions, &mut Tape::new());
