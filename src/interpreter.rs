@@ -1,4 +1,4 @@
-use crate::instructions::Opcode;
+use crate::instructions::Op;
 use crate::MEMORY_SIZE;
 
 use std::io;
@@ -25,28 +25,28 @@ impl Default for Tape {
     }
 }
 
-pub fn interpret(instructions: &[Opcode], tape: &mut Tape) {
+pub fn interpret(instructions: &[Op], tape: &mut Tape) {
     let mut i = 0;
 
     while i < instructions.len() {
         match &instructions[i] {
-            Opcode::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(*n as u8),
-            Opcode::Move(n) => tape.ptr = tape.ptr.wrapping_add(*n as usize),
+            Op::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(*n as u8),
+            Op::Move(n) => tape.ptr = tape.ptr.wrapping_add(*n as usize),
 
-            Opcode::Loop(loop_body) => {
+            Op::Loop(loop_body) => {
                 while tape.memory[tape.ptr] != 0 {
                     interpret(loop_body, tape);
                 }
             }
 
-            Opcode::PrintChar => print!("{}", tape.memory[tape.ptr] as char),
+            Op::PrintChar => print!("{}", tape.memory[tape.ptr] as char),
 
-            Opcode::ReadChar => {
+            Op::ReadChar => {
                 io::stdout().flush().unwrap();
                 tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8;
             }
 
-            Opcode::Clear => tape.memory[tape.ptr] = 0,
+            Op::Clear => tape.memory[tape.ptr] = 0,
         }
 
         i += 1;

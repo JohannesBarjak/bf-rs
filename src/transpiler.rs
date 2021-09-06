@@ -1,8 +1,8 @@
-use crate::instructions::Opcode;
+use crate::instructions::Op;
 use crate::MEMORY_SIZE;
 
 #[must_use]
-pub fn transpile(instructions: Vec<Opcode>) -> String {
+pub fn transpile(instructions: Vec<Op>) -> String {
     let mut output = c_header();
 
     transpile_instructions(instructions, &mut output);
@@ -21,22 +21,22 @@ fn c_header() -> String {
     )
 }
 
-fn transpile_instructions(instructions: Vec<Opcode>, output: &mut String) {
+fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
     for opcode in instructions {
         match opcode {
-            Opcode::Add(n) => output.push_str(format!("    *ptr += {};\n", n as u8).as_str()),
-            Opcode::Move(n) => output.push_str(format!("    ptr += {};\n", n).as_str()),
+            Op::Add(n) => output.push_str(format!("    *ptr += {};\n", n as u8).as_str()),
+            Op::Move(n) => output.push_str(format!("    ptr += {};\n", n).as_str()),
 
-            Opcode::Loop(loop_body) => {
+            Op::Loop(loop_body) => {
                 output.push_str("    while(*ptr) {\n");
                 transpile_instructions(loop_body, output);
                 output.push_str("    }\n");
             }
 
-            Opcode::PrintChar => output.push_str("    putchar(*ptr);\n"),
-            Opcode::ReadChar => output.push_str("    *ptr = getchar();\n"),
+            Op::PrintChar => output.push_str("    putchar(*ptr);\n"),
+            Op::ReadChar => output.push_str("    *ptr = getchar();\n"),
 
-            Opcode::Clear => output.push_str("    *ptr = 0;\n"),
+            Op::Clear => output.push_str("    *ptr = 0;\n"),
         }
     }
 }

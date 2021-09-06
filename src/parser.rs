@@ -1,8 +1,8 @@
-use crate::instructions::Opcode;
+use crate::instructions::Op;
 use crate::tokens::Token;
 
 #[must_use]
-pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
+pub fn parse(tokens: &[Token]) -> Vec<Op> {
     let (mut loop_stack, mut instructions) = (Vec::new(), Vec::new());
 
     let mut i = 0;
@@ -17,7 +17,7 @@ pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
                     i += 1;
                 }
 
-                instructions.push(Opcode::Add(value));
+                instructions.push(Op::Add(value));
                 i -= 1;
             }
 
@@ -29,12 +29,12 @@ pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
                     i += 1;
                 }
 
-                instructions.push(Opcode::Move(value));
+                instructions.push(Op::Move(value));
                 i -= 1;
             }
 
             Token::LoopStart => {
-                instructions.push(Opcode::Loop(Vec::new()));
+                instructions.push(Op::Loop(Vec::new()));
                 loop_stack.push(instructions.len());
             }
 
@@ -42,11 +42,11 @@ pub fn parse(tokens: &[Token]) -> Vec<Opcode> {
                 let loop_start = loop_stack.pop().expect("unmatched `[`");
 
                 let loop_body = instructions.split_off(loop_start);
-                *instructions.last_mut().unwrap() = Opcode::Loop(loop_body);
+                *instructions.last_mut().unwrap() = Op::Loop(loop_body);
             }
 
-            Token::PrintChar => instructions.push(Opcode::PrintChar),
-            Token::ReadChar => instructions.push(Opcode::ReadChar),
+            Token::PrintChar => instructions.push(Op::PrintChar),
+            Token::ReadChar => instructions.push(Op::ReadChar),
         }
 
         i += 1;

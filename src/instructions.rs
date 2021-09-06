@@ -1,8 +1,8 @@
 #[derive(PartialEq, Debug, Clone)]
-pub enum Opcode {
+pub enum Op {
     Add(isize),
     Move(isize),
-    Loop(Vec<Opcode>),
+    Loop(Vec<Op>),
     PrintChar,
     ReadChar,
     Clear,
