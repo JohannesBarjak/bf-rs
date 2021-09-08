@@ -6,4 +6,5 @@ pub enum Op {
     PrintChar,
     ReadChar,
     Clear,
+    Mul(isize, isize),
 }
