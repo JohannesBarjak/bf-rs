@@ -20,7 +20,7 @@ pub fn optimize(instructions: &mut Vec<Op>) {
 
                     for op in copy_body {
                         if let Op::Move(n) = op {
-                            offset += *n
+                            offset += *n;
                         } else if let Op::Add(mul) = op {
                             copy_stack.push(Op::Mul(offset, *mul));
                         };
