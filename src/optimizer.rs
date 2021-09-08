@@ -11,7 +11,7 @@ pub fn optimize(instructions: &mut Vec<Op>) {
                 [Op::Add(-1), ..]
                     if (&loop_body[1..])
                         .iter()
-                        .all(|op| matches!(op, Op::Add(1) | Op::Move(_))) =>
+                        .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
                 {
                     let copy_body = &loop_body[1..];
 
