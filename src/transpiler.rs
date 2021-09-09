@@ -43,7 +43,7 @@ fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
             }
 
             Op::Shift(n) => {
-                output.push_str(format!("    while (*ptr) ptr += {};", n).as_str());
+                output.push_str(format!("    while (*ptr) ptr += {};\n", n).as_str());
             }
         }
     }
