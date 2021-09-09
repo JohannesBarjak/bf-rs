@@ -7,4 +7,5 @@ pub enum Op {
     ReadChar,
     Clear,
     Mul(isize, isize),
+    Shift(isize),
 }

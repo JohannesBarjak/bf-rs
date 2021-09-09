@@ -32,6 +32,8 @@ pub fn optimize(instructions: &mut Vec<Op>) {
                     }
                 }
 
+                [Op::Move(step)] => instructions[i] = Op::Shift(step),
+
                 _ => optimize(loop_body),
             }
         }

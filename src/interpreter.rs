@@ -53,6 +53,12 @@ pub fn interpret(instructions: &[Op], tape: &mut Tape) {
                 tape.memory[copy_index] =
                     tape.memory[copy_index].wrapping_add(tape.memory[tape.ptr] * (*mul as u8));
             }
+
+            Op::Shift(n) => {
+                while tape.memory[tape.ptr] != 0 {
+                    tape.ptr += *n as usize;
+                }
+            }
         }
 
         i += 1;
