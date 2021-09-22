@@ -1,3 +1,5 @@
+use fnv::FnvHashMap;
+
 use crate::instructions::Op;
 
 pub fn optimize(instructions: &mut Vec<Op>) {
@@ -8,31 +10,36 @@ pub fn optimize(instructions: &mut Vec<Op>) {
             match loop_body[..] {
                 [Op::Add(1 | -1)] => instructions[i] = Op::Clear,
 
-                [Op::Add(-1), ..]
-                    if (&loop_body[1..])
-                        .iter()
-                        .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
+                [Op::Move(step)] => instructions[i] = Op::Shift(step),
+
+                _ if (&loop_body[..])
+                    .iter()
+                    .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
                 {
-                    let copy_body = &loop_body[1..];
-
                     let mut offset = 0;
-                    let mut copy_stack = Vec::new();
+                    let mut tape_map = FnvHashMap::default();
 
-                    for op in copy_body {
+                    for op in loop_body {
                         if let Op::Move(n) = op {
                             offset += *n;
                         } else if let Op::Add(mul) = op {
-                            copy_stack.push(Op::Mul(offset, *mul));
+                            tape_map.insert(offset, *mul + tape_map.get(&offset).unwrap_or(&0));
                         };
                     }
 
-                    if offset == 0 {
-                        copy_stack.push(Op::Clear);
-                        instructions.splice(i..i + 1, copy_stack.iter().cloned());
+                    if offset == 0 && tape_map.get(&0) == Some(&-1) {
+                        tape_map.remove(&0);
+
+                        let mut replacement = Vec::new();
+
+                        for (offset, mul) in tape_map.iter() {
+                            replacement.push(Op::Mul(*offset, *mul));
+                        }
+
+                        replacement.push(Op::Clear);
+                        instructions.splice(i..i + 1, replacement.iter().cloned());
                     }
                 }
-
-                [Op::Move(step)] => instructions[i] = Op::Shift(step),
 
                 _ => optimize(loop_body),
             }
