@@ -51,7 +51,7 @@ pub fn interpret(instructions: &[Op], tape: &mut Tape) {
             Op::Mul(offset, mul) => {
                 let copy_index = tape.ptr + *offset as usize;
                 tape.memory[copy_index] =
-                    tape.memory[copy_index].wrapping_add(tape.memory[tape.ptr] * (*mul as u8));
+                    tape.memory[copy_index].wrapping_add(tape.memory[tape.ptr] * *mul);
             }
 
             Op::Shift(n) => {
