@@ -8,7 +8,7 @@ pub fn optimize(instructions: &mut Vec<Op>) {
     while i < instructions.len() {
         if let Op::Loop(loop_body) = &mut instructions[i] {
             match loop_body[..] {
-                [Op::Add(1 | -1)] => instructions[i] = Op::Clear,
+                [Op::Add(1 | u8::MAX)] => instructions[i] = Op::Clear,
 
                 [Op::Move(step)] => instructions[i] = Op::Shift(step),
 
@@ -27,12 +27,12 @@ pub fn optimize(instructions: &mut Vec<Op>) {
                         };
                     }
 
-                    if offset == 0 && tape_map.get(&0) == Some(&-1) {
+                    if offset == 0 && tape_map.get(&0) == Some(&u8::MAX) {
                         tape_map.remove(&0);
 
                         let mut replacement = Vec::new();
 
-                        for (offset, mul) in tape_map.iter() {
+                        for (offset, mul) in &tape_map {
                             replacement.push(Op::Mul(*offset, *mul));
                         }
 

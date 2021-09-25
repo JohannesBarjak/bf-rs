@@ -17,7 +17,7 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
                     i += 1;
                 }
 
-                instructions.push(Op::Add(value));
+                instructions.push(Op::Add(value as u8));
                 i -= 1;
             }
 

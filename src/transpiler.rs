@@ -24,7 +24,7 @@ fn c_header() -> String {
 fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
     for opcode in instructions {
         match opcode {
-            Op::Add(n) => output.push_str(format!("    *ptr += {};\n", n as u8).as_str()),
+            Op::Add(n) => output.push_str(format!("    *ptr += {};\n", n).as_str()),
             Op::Move(n) => output.push_str(format!("    ptr += {};\n", n).as_str()),
 
             Op::Loop(loop_body) => {
