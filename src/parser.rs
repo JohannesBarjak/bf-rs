@@ -3,34 +3,41 @@ use crate::tokens::Token;
 
 #[must_use]
 pub fn parse(tokens: &[Token]) -> Vec<Op> {
+    let mut tokens = tokens.iter().peekable();
     let (mut loop_stack, mut instructions) = (Vec::new(), Vec::new());
 
-    let mut i = 0;
-
-    while i < tokens.len() {
-        match tokens[i] {
+    while let Some(token) = tokens.next() {
+        match token {
             Token::Add | Token::Sub => {
-                let mut value = 0;
+                let mut value: isize = if *token == Token::Add { 1 } else { -1 };
 
-                while matches!(tokens.get(i), Some(Token::Add | Token::Sub)) {
-                    value += if tokens[i] == Token::Add { 1 } else { -1 };
-                    i += 1;
+                while matches!(tokens.peek(), Some(Token::Add | Token::Sub)) {
+                    value += if *tokens.next().unwrap() == Token::Add {
+                        1
+                    } else {
+                        -1
+                    };
                 }
 
-                instructions.push(Op::Add(value as u8));
-                i -= 1;
+                if value != 0 {
+                    instructions.push(Op::Add(value as u8));
+                }
             }
 
             Token::MoveRight | Token::MoveLeft => {
-                let mut value = 0;
+                let mut value: isize = if *token == Token::MoveRight { 1 } else { -1 };
 
-                while matches!(tokens.get(i), Some(Token::MoveRight | Token::MoveLeft)) {
-                    value += if tokens[i] == Token::MoveRight { 1 } else { -1 };
-                    i += 1;
+                while matches!(tokens.peek(), Some(Token::MoveRight | Token::MoveLeft)) {
+                    value += if *tokens.next().unwrap() == Token::MoveRight {
+                        1
+                    } else {
+                        -1
+                    };
                 }
 
-                instructions.push(Op::Move(value));
-                i -= 1;
+                if value != 0 {
+                    instructions.push(Op::Move(value));
+                }
             }
 
             Token::LoopStart => {
@@ -48,8 +55,6 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
             Token::PrintChar => instructions.push(Op::PrintChar),
             Token::ReadChar => instructions.push(Op::ReadChar),
         }
-
-        i += 1;
     }
 
     instructions
