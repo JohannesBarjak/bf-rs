@@ -57,5 +57,9 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
         }
     }
 
+    if !loop_stack.is_empty() {
+        panic!("unmatched `]`");
+    }
+
     instructions
 }
