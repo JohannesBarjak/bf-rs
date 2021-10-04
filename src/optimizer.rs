@@ -99,7 +99,7 @@ fn optimize_loops(instructions: &mut Vec<Op>) {
                     }
                 }
 
-                _ => optimize(loop_body),
+                _ => optimize_loops(loop_body),
             }
         }
 
