@@ -3,41 +3,16 @@ use crate::tokens::Token;
 
 #[must_use]
 pub fn parse(tokens: &[Token]) -> Vec<Op> {
-    let mut tokens = tokens.iter().peekable();
     let (mut loop_stack, mut instructions) = (Vec::new(), Vec::new());
 
-    while let Some(token) = tokens.next() {
+    for token in tokens {
         match token {
             Token::Add | Token::Sub => {
-                let mut value: isize = if *token == Token::Add { 1 } else { -1 };
-
-                while matches!(tokens.peek(), Some(Token::Add | Token::Sub)) {
-                    value += if *tokens.next().unwrap() == Token::Add {
-                        1
-                    } else {
-                        -1
-                    };
-                }
-
-                if value != 0 {
-                    instructions.push(Op::Add(value as u8));
-                }
+                instructions.push(Op::Add(if *token == Token::Add { 1 } else { u8::MAX }));
             }
 
             Token::MoveRight | Token::MoveLeft => {
-                let mut value: isize = if *token == Token::MoveRight { 1 } else { -1 };
-
-                while matches!(tokens.peek(), Some(Token::MoveRight | Token::MoveLeft)) {
-                    value += if *tokens.next().unwrap() == Token::MoveRight {
-                        1
-                    } else {
-                        -1
-                    };
-                }
-
-                if value != 0 {
-                    instructions.push(Op::Move(value));
-                }
+                instructions.push(Op::Move(if *token == Token::MoveRight { 1 } else { -1 }));
             }
 
             Token::LoopStart => {

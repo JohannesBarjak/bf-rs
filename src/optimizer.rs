@@ -3,6 +3,64 @@ use fnv::FnvHashMap;
 use crate::instructions::Op;
 
 pub fn optimize(instructions: &mut Vec<Op>) {
+    for _ in 0..2 {
+        compress_instructions(instructions);
+        optimize_loops(instructions);
+        set_optimization(instructions);
+    }
+}
+
+fn compress_instructions(instructions: &mut Vec<Op>) {
+    let mut i = 0;
+
+    while i < instructions.len() {
+        match &mut instructions[i] {
+            Op::Add(_) => {
+                let mut value: u8 = 0;
+                let start = i;
+
+                while let Some(Op::Add(n)) = instructions.get(i) {
+                    value = value.wrapping_add(*n);
+                    i += 1;
+                }
+
+                if value != 0 {
+                    instructions.splice(start..i, [Op::Add(value)].iter().cloned());
+                } else {
+                    instructions.splice(start..i, [].iter().cloned());
+                }
+
+                i = start;
+            }
+
+            Op::Move(_) => {
+                let mut value: isize = 0;
+                let start = i;
+
+                while let Some(Op::Move(n)) = instructions.get(i) {
+                    value += *n;
+                    i += 1;
+                }
+
+                if value != 0 {
+                    instructions.splice(start..i, [Op::Move(value)].iter().cloned());
+                } else {
+                    instructions.splice(start..i, [].iter().cloned());
+                }
+
+                i = start;
+            }
+
+            Op::Loop(loop_body) => compress_instructions(loop_body),
+
+            _ => (),
+        }
+
+        i += 1;
+    }
+}
+
+fn optimize_loops(instructions: &mut Vec<Op>) {
     let mut i = 0;
 
     while i < instructions.len() {
@@ -43,6 +101,27 @@ pub fn optimize(instructions: &mut Vec<Op>) {
 
                 _ => optimize(loop_body),
             }
+        }
+
+        i += 1;
+    }
+}
+
+fn set_optimization(instructions: &mut Vec<Op>) {
+    let mut i = 0;
+
+    while i < instructions.len() {
+        match &mut instructions[i] {
+            Op::Clear => {
+                if let Some(Op::Add(n)) = instructions.get(i + 1) {
+                    let n = *n;
+                    instructions.splice(i..i + 2, [Op::Set(n)].iter().cloned());
+                }
+            }
+
+            Op::Loop(loop_body) => set_optimization(loop_body),
+
+            _ => (),
         }
 
         i += 1;
