@@ -21,7 +21,7 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
             }
 
             Token::LoopEnd => {
-                let loop_start = loop_stack.pop().expect("unmatched `[`");
+                let loop_start = loop_stack.pop().expect("unmatched `]`");
 
                 let loop_body = instructions.split_off(loop_start);
                 *instructions.last_mut().unwrap() = Op::Loop(loop_body);
@@ -33,7 +33,7 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
     }
 
     if !loop_stack.is_empty() {
-        panic!("unmatched `]`");
+        panic!("unmatched `[`");
     }
 
     instructions
