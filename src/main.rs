@@ -1,9 +1,5 @@
-use bf::interpreter;
 use bf::interpreter::Tape;
-use bf::optimizer;
-use bf::parser;
-use bf::tokenizer;
-use bf::transpiler;
+use bf::{interpreter, optimizer, parser, tokenizer, transpiler};
 use clap::clap_app;
 
 use std::fs;
@@ -23,7 +19,10 @@ fn main() {
         Some(file) => {
             let mut instructions =
                 parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
-            optimizer::optimize(&mut instructions);
+
+            for _ in 0..2 {
+                optimizer::optimize(&mut instructions);
+            }
 
             if matches.is_present("interpret") {
                 interpreter::interpret(&instructions, &mut Tape::new());

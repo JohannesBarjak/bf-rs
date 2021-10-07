@@ -3,11 +3,9 @@ use fnv::FnvHashMap;
 use crate::instructions::Op;
 
 pub fn optimize(instructions: &mut Vec<Op>) {
-    for _ in 0..2 {
-        compress_instructions(instructions);
-        optimize_loops(instructions);
-        set_optimization(instructions);
-    }
+    compress_instructions(instructions);
+    optimize_loops(instructions);
+    set_optimization(instructions);
 }
 
 fn compress_instructions(instructions: &mut Vec<Op>) {
