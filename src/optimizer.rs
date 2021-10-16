@@ -1,127 +1,114 @@
 use fnv::FnvHashMap;
+use itertools::Itertools;
 
 use crate::instructions::Op;
 
-pub fn optimize(instructions: &mut Vec<Op>) {
-    compress_instructions(instructions);
-    optimize_loops(instructions);
-    set_optimization(instructions);
+pub fn optimize(instructions: Vec<Op>) -> Vec<Op> {
+    simplify_code(remove_dead_code(set_optimization(optimize_loops(
+        compress_instructions(instructions),
+    ))))
 }
 
-fn compress_instructions(instructions: &mut Vec<Op>) {
-    let mut i = 0;
-
-    while i < instructions.len() {
-        match &mut instructions[i] {
-            Op::Add(_) => {
-                let mut value: u8 = 0;
-                let start = i;
-
-                while let Some(Op::Add(n)) = instructions.get(i) {
-                    value = value.wrapping_add(*n);
-                    i += 1;
-                }
-
-                if value != 0 {
-                    instructions.splice(start..i, [Op::Add(value)].iter().cloned());
-                } else {
-                    instructions.splice(start..i, [].iter().cloned());
-                }
-
-                i = start;
-            }
-
-            Op::Move(_) => {
-                let mut value: isize = 0;
-                let start = i;
-
-                while let Some(Op::Move(n)) = instructions.get(i) {
-                    value += *n;
-                    i += 1;
-                }
-
-                if value != 0 {
-                    instructions.splice(start..i, [Op::Move(value)].iter().cloned());
-                } else {
-                    instructions.splice(start..i, [].iter().cloned());
-                }
-
-                i = start;
-            }
-
-            Op::Loop(loop_body) => compress_instructions(loop_body),
-
-            _ => (),
-        }
-
-        i += 1;
-    }
+fn simplify_code(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .map(|op| if op == Op::Set(0) { Op::Clear } else { op })
+        .collect()
 }
 
-fn optimize_loops(instructions: &mut Vec<Op>) {
-    let mut i = 0;
+fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .coalesce(|op1, op2| match (&op1, &op2) {
+            (Op::Loop(_), Op::Loop(_)) => Ok(op1),
+            (Op::Loop(_), Op::Clear) => Ok(op1),
 
-    while i < instructions.len() {
-        if let Op::Loop(loop_body) = &mut instructions[i] {
-            match loop_body[..] {
-                [Op::Add(1 | u8::MAX)] => instructions[i] = Op::Clear,
+            (Op::Set(_), Op::Set(n2)) => Ok(Op::Set(*n2)),
 
-                [Op::Move(step)] => instructions[i] = Op::Shift(step),
+            _ => Err((op1, op2)),
+        })
+        .collect()
+}
 
-                _ if (&loop_body[..])
-                    .iter()
-                    .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
-                {
-                    let mut offset = 0;
-                    let mut tape_map = FnvHashMap::default();
+fn compress_instructions(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .coalesce(|op1, op2| match (&op1, &op2) {
+            (Op::Add(n1), Op::Add(n2)) => Ok(Op::Add(n1 + n2)),
+            (Op::Move(n1), Op::Move(n2)) => Ok(Op::Move(n1 + n2)),
 
-                    for op in loop_body {
-                        if let Op::Move(n) = op {
-                            offset += *n;
-                        } else if let Op::Add(mul) = op {
-                            tape_map.insert(offset, *mul + tape_map.get(&offset).unwrap_or(&0));
-                        };
-                    }
+            _ => Err((op1, op2)),
+        })
+        .filter_map(|op| match op {
+            Op::Loop(body) => Some(Op::Loop(compress_instructions(body))),
+            Op::Add(0) | Op::Move(0) => None,
 
-                    if offset == 0 && tape_map.get(&0) == Some(&u8::MAX) {
-                        tape_map.remove(&0);
+            _ => Some(op),
+        })
+        .collect()
+}
 
-                        let mut replacement = Vec::new();
+fn optimize_loops(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .flat_map(|op| {
+            if let Op::Loop(body) = &op {
+                match body[..] {
+                    [Op::Add(1 | u8::MAX)] => vec![Op::Set(0)],
 
-                        for (offset, mul) in &tape_map {
-                            replacement.push(Op::Mul(*offset, *mul));
+                    [Op::Move(step)] => vec![Op::Shift(step)],
+
+                    _ if (&body[..])
+                        .iter()
+                        .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
+                    {
+                        let mut offset = 0;
+                        let mut tape_map = FnvHashMap::default();
+
+                        for op in body {
+                            if let Op::Move(n) = op {
+                                offset += n;
+                            } else if let Op::Add(mul) = op {
+                                tape_map.insert(offset, mul + tape_map.get(&offset).unwrap_or(&0));
+                            };
                         }
 
-                        replacement.push(Op::Clear);
-                        instructions.splice(i..i + 1, replacement.iter().cloned());
+                        if offset == 0 && tape_map.get(&0) == Some(&u8::MAX) {
+                            tape_map.remove(&0);
+
+                            let mut replacement = Vec::new();
+
+                            for (offset, mul) in tape_map {
+                                replacement.push(Op::Mul(offset, mul));
+                            }
+
+                            replacement.push(Op::Set(0));
+                            replacement
+                        } else {
+                            vec![op]
+                        }
                     }
+
+                    _ => vec![Op::Loop(optimize_loops(body.clone()))],
                 }
-
-                _ => optimize_loops(loop_body),
+            } else {
+                vec![op]
             }
-        }
-
-        i += 1;
-    }
+        })
+        .collect()
 }
 
-fn set_optimization(instructions: &mut Vec<Op>) {
-    let mut i = 0;
+fn set_optimization(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .coalesce(|op1, op2| match (&op1, &op2) {
+            (Op::Set(n1), Op::Add(n2)) => Ok(Op::Set(n1 + n2)),
 
-    while i < instructions.len() {
-        match &mut instructions[i] {
-            Op::Clear => {
-                if let Some(Op::Add(n)) = instructions.get(i + 1) {
-                    let n = *n;
-                    instructions.splice(i..i + 2, [Op::Set(n)].iter().cloned());
-                }
-            }
-
-            Op::Loop(loop_body) => set_optimization(loop_body),
-
-            _ => (),
-        }
-
-        i += 1;
-    }
+            _ => Err((op1, op2)),
+        })
+        .map(|op| match op {
+            Op::Loop(body) => Op::Loop(set_optimization(body)),
+            _ => op,
+        })
+        .collect()
 }

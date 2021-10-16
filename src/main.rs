@@ -21,7 +21,7 @@ fn main() {
                 parser::parse(&tokenizer::tokenize(&fs::read_to_string(file).unwrap()));
 
             for _ in 0..2 {
-                optimizer::optimize(&mut instructions);
+                instructions = optimizer::optimize(instructions);
             }
 
             if matches.is_present("interpret") {
