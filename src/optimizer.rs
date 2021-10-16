@@ -17,6 +17,11 @@ fn simplify_code(instructions: Vec<Op>) -> Vec<Op> {
 }
 
 fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
+    let instructions = match instructions[..] {
+        [Op::Loop(_), ..] => instructions[1..].to_vec(),
+        _ => instructions,
+    };
+
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
