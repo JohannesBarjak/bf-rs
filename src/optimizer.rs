@@ -17,11 +17,6 @@ fn simplify_code(instructions: Vec<Op>) -> Vec<Op> {
 }
 
 fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
-    let instructions = match instructions[..] {
-        [Op::Loop(_), ..] => instructions[1..].to_vec(),
-        _ => instructions,
-    };
-
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
@@ -31,6 +26,10 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
             (Op::Set(_), Op::Set(n2)) => Ok(Op::Set(*n2)),
 
             _ => Err((op1, op2)),
+        })
+        .map(|op| match op {
+            Op::Loop(body) => Op::Loop(remove_dead_code(body)),
+            _ => op,
         })
         .collect()
 }
@@ -57,7 +56,7 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .flat_map(|op| {
-            if let Op::Loop(body) = &op {
+            if let Op::Loop(body) = op {
                 match body[..] {
                     [Op::Add(1 | u8::MAX)] => vec![Op::Set(0)],
 
@@ -70,7 +69,7 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
                         let mut offset = 0;
                         let mut tape_map = FnvHashMap::default();
 
-                        for op in body {
+                        for op in &body {
                             if let Op::Move(n) = op {
                                 offset += n;
                             } else if let Op::Add(mul) = op {
@@ -90,11 +89,11 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
                             replacement.push(Op::Set(0));
                             replacement
                         } else {
-                            vec![op]
+                            vec![Op::Loop(body)]
                         }
                     }
 
-                    _ => vec![Op::Loop(convert_simple_loops(body.clone()))],
+                    _ => vec![Op::Loop(convert_simple_loops(body))],
                 }
             } else {
                 vec![op]
