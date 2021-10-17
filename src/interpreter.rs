@@ -31,9 +31,9 @@ pub fn interpret(instructions: &[Op], tape: &mut Tape) {
             Op::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(*n),
             Op::Move(n) => tape.ptr += *n as usize,
 
-            Op::Loop(loop_body) => {
+            Op::Loop(body) => {
                 while tape.memory[tape.ptr] != 0 {
-                    interpret(loop_body, tape);
+                    interpret(body, tape);
                 }
             }
 

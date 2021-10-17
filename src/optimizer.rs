@@ -26,7 +26,7 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
             (Op::Loop(_), Op::Loop(_)) => Ok(op1),
-            (Op::Loop(_), Op::Clear) => Ok(op1),
+            (Op::Loop(_), Op::Set(0)) => Ok(op1),
 
             (Op::Set(_), Op::Set(n2)) => Ok(Op::Set(*n2)),
 

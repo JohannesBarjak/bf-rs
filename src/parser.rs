@@ -21,10 +21,10 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
             }
 
             Token::LoopEnd => {
-                let loop_start = loop_stack.pop().expect("unmatched `]`");
+                let start = loop_stack.pop().expect("unmatched `]`");
 
-                let loop_body = instructions.split_off(loop_start);
-                *instructions.last_mut().unwrap() = Op::Loop(loop_body);
+                let body = instructions.split_off(start);
+                *instructions.last_mut().unwrap() = Op::Loop(body);
             }
 
             Token::PrintChar => instructions.push(Op::PrintChar),

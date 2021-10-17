@@ -27,9 +27,9 @@ fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
             Op::Add(n) => output.push_str(format!("    *ptr += {};\n", n).as_str()),
             Op::Move(n) => output.push_str(format!("    ptr += {};\n", n).as_str()),
 
-            Op::Loop(loop_body) => {
+            Op::Loop(body) => {
                 output.push_str("    while(*ptr) {\n");
-                transpile_instructions(loop_body, output);
+                transpile_instructions(body, output);
                 output.push_str("    }\n");
             }
 
