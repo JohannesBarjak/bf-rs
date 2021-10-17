@@ -4,7 +4,7 @@ use itertools::Itertools;
 use crate::instructions::Op;
 
 pub fn optimize(instructions: Vec<Op>) -> Vec<Op> {
-    simplify_code(remove_dead_code(set_optimization(optimize_loops(
+    simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
         compress_instructions(instructions),
     ))))
 }
@@ -53,7 +53,7 @@ fn compress_instructions(instructions: Vec<Op>) -> Vec<Op> {
         .collect()
 }
 
-fn optimize_loops(instructions: Vec<Op>) -> Vec<Op> {
+fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .flat_map(|op| {
@@ -94,7 +94,7 @@ fn optimize_loops(instructions: Vec<Op>) -> Vec<Op> {
                         }
                     }
 
-                    _ => vec![Op::Loop(optimize_loops(body.clone()))],
+                    _ => vec![Op::Loop(convert_simple_loops(body.clone()))],
                 }
             } else {
                 vec![op]
