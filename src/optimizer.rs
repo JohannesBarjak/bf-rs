@@ -1,6 +1,8 @@
 use fnv::FnvHashMap;
 use itertools::Itertools;
 
+use std::mem;
+
 use crate::instructions::Op;
 
 pub fn optimize(instructions: Vec<Op>) -> Vec<Op> {
@@ -35,9 +37,9 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         .collect()
 }
 
-fn calculate_offsets(instructions: Vec<Op>) -> Vec<Op> {
+fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
     let mut new_instructions = Vec::with_capacity(instructions.len());
-    let mut instructions = instructions.into_iter();
+    let mut instructions = instructions.iter_mut().peekable();
 
     while let Some(op) = instructions.next() {
         match op {
@@ -48,14 +50,14 @@ fn calculate_offsets(instructions: Vec<Op>) -> Vec<Op> {
 
                 part.append(
                     &mut instructions
-                        .take_while_ref(|op| matches!(op, Op::Add(..) | Op::Move(_)))
+                        .peeking_take_while(|op| matches!(op, Op::Add(..) | Op::Move(_)))
                         .collect_vec(),
                 );
 
                 for op in part {
                     match op {
-                        Op::Add(n, off) => reg.push(Op::Add(n, off + offset)),
-                        Op::Move(off) => offset += off,
+                        Op::Add(n, off) => reg.push(Op::Add(*n, *off + offset)),
+                        Op::Move(off) => offset += *off,
 
                         _ => unreachable!(),
                     }
@@ -65,8 +67,8 @@ fn calculate_offsets(instructions: Vec<Op>) -> Vec<Op> {
                 new_instructions.append(&mut reg);
             }
 
-            Op::Loop(body) => new_instructions.push(Op::Loop(calculate_offsets(body))),
-            _ => new_instructions.push(op),
+            Op::Loop(body) => new_instructions.push(Op::Loop(calculate_offsets(mem::take(body)))),
+            _ => new_instructions.push(mem::replace(op, Op::Clear)),
         }
     }
 
