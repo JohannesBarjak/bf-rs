@@ -28,7 +28,11 @@ impl Default for Tape {
 pub fn interpret(instructions: &[Op], tape: &mut Tape) {
     for instruction in instructions {
         match instruction {
-            Op::Add(n) => tape.memory[tape.ptr] = tape.memory[tape.ptr].wrapping_add(*n),
+            Op::Add(n, offset) => {
+                tape.memory[tape.ptr + *offset as usize] =
+                    tape.memory[tape.ptr + *offset as usize].wrapping_add(*n)
+            }
+
             Op::Move(n) => tape.ptr += *n as usize,
 
             Op::Loop(body) => {

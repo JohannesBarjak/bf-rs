@@ -8,7 +8,7 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
     for token in tokens {
         match token {
             Token::Add | Token::Sub => {
-                instructions.push(Op::Add(if *token == Token::Add { 1 } else { u8::MAX }));
+                instructions.push(Op::Add(if *token == Token::Add { 1 } else { u8::MAX }, 0));
             }
 
             Token::MoveRight | Token::MoveLeft => {

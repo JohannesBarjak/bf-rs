@@ -1,6 +1,6 @@
 #[derive(PartialEq, Debug, Clone)]
 pub enum Op {
-    Add(u8),
+    Add(u8, isize),
     Move(isize),
     Loop(Vec<Op>),
     PrintChar,

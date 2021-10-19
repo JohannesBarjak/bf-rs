@@ -5,7 +5,7 @@ use crate::instructions::Op;
 
 pub fn optimize(instructions: Vec<Op>) -> Vec<Op> {
     simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
-        compress_instructions(instructions),
+        calculate_offsets(compress_instructions(instructions)),
     ))))
 }
 
@@ -35,18 +35,59 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         .collect()
 }
 
+fn calculate_offsets(instructions: Vec<Op>) -> Vec<Op> {
+    let mut new_instructions = Vec::with_capacity(instructions.len());
+    let mut instructions = instructions.into_iter();
+
+    while let Some(op) = instructions.next() {
+        match op {
+            Op::Add(..) | Op::Move(_) => {
+                let mut part = vec![op];
+                let mut reg = Vec::new();
+                let mut offset = 0;
+
+                part.append(
+                    &mut instructions
+                        .take_while_ref(|op| matches!(op, Op::Add(..) | Op::Move(_)))
+                        .collect_vec(),
+                );
+
+                for op in part {
+                    match op {
+                        Op::Add(n, off) => reg.push(Op::Add(n, off + offset)),
+                        Op::Move(off) => offset += off,
+
+                        _ => unreachable!(),
+                    }
+                }
+
+                reg.push(Op::Move(offset));
+                new_instructions.append(&mut reg);
+            }
+
+            Op::Loop(body) => new_instructions.push(Op::Loop(calculate_offsets(body))),
+            _ => new_instructions.push(op),
+        }
+    }
+
+    new_instructions
+}
+
 fn compress_instructions(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Add(n1), Op::Add(n2)) => Ok(Op::Add(n1 + n2)),
+            (Op::Add(n1, offset), Op::Add(n2, offset2)) if offset == offset2 => {
+                Ok(Op::Add(n1 + n2, *offset))
+            }
+
             (Op::Move(n1), Op::Move(n2)) => Ok(Op::Move(n1 + n2)),
 
             _ => Err((op1, op2)),
         })
         .filter_map(|op| match op {
             Op::Loop(body) => Some(Op::Loop(compress_instructions(body))),
-            Op::Add(0) | Op::Move(0) => None,
+            Op::Add(0, _) | Op::Move(0) => None,
 
             _ => Some(op),
         })
@@ -59,13 +100,13 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
         .flat_map(|op| {
             if let Op::Loop(body) = op {
                 match body[..] {
-                    [Op::Add(1 | u8::MAX)] => vec![Op::Set(0)],
+                    [Op::Add(1 | u8::MAX, 0)] => vec![Op::Set(0)],
 
                     [Op::Move(step)] => vec![Op::Shift(step)],
 
                     _ if (&body[..])
                         .iter()
-                        .all(|op| matches!(op, Op::Add(_) | Op::Move(_))) =>
+                        .all(|op| matches!(op, Op::Add(_, _) | Op::Move(_))) =>
                     {
                         let mut offset = 0;
                         let mut tape_map = FnvHashMap::default();
@@ -73,8 +114,11 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
                         for op in &body {
                             if let Op::Move(n) = op {
                                 offset += n;
-                            } else if let Op::Add(mul) = op {
-                                tape_map.insert(offset, mul + tape_map.get(&offset).unwrap_or(&0));
+                            } else if let Op::Add(mul, off) = op {
+                                tape_map.insert(
+                                    offset + off,
+                                    mul + tape_map.get(&(offset + off)).unwrap_or(&0),
+                                );
                             };
                         }
 
@@ -107,7 +151,7 @@ fn set_optimization(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Set(n1), Op::Add(n2)) => Ok(Op::Set(n1 + n2)),
+            (Op::Set(n1), Op::Add(n2, 0)) => Ok(Op::Set(n1 + n2)),
 
             _ => Err((op1, op2)),
         })
