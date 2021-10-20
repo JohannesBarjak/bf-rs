@@ -5,10 +5,21 @@ use std::mem;
 
 use crate::instructions::Op;
 
-pub fn optimize(instructions: Vec<Op>) -> Vec<Op> {
-    simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
-        calculate_offsets(compress_instructions(instructions)),
-    ))))
+pub fn optimize(mut instructions: Vec<Op>) -> Vec<Op> {
+    let optimizer_pass = |instructions| {
+        simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
+            calculate_offsets(compress_instructions(instructions)),
+        ))))
+    };
+
+    let mut optimized_instructions = optimizer_pass(instructions.clone());
+
+    while optimized_instructions != instructions {
+        instructions = optimized_instructions;
+        optimized_instructions = optimizer_pass(instructions.clone());
+    }
+
+    optimized_instructions
 }
 
 fn simplify_code(instructions: Vec<Op>) -> Vec<Op> {
