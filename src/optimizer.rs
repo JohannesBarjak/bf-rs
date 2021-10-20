@@ -104,7 +104,10 @@ fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
                     }
                 }
 
-                new_block.push(Op::Move(offset));
+                if offset != 0 {
+                    new_block.push(Op::Move(offset));
+                }
+
                 new_instructions.append(&mut new_block);
             }
 
