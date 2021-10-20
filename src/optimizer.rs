@@ -25,7 +25,13 @@ pub fn optimize(mut instructions: Vec<Op>) -> Vec<Op> {
 fn simplify_code(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
-        .map(|op| if op == Op::Set(0) { Op::Clear } else { op })
+        .map(|op| {
+            if let Op::Set(0, offset) = op {
+                Op::Clear(offset)
+            } else {
+                op
+            }
+        })
         .collect()
 }
 
@@ -34,10 +40,12 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
             (Op::Loop(_), Op::Loop(_)) => Ok(op1),
-            (Op::Loop(_), Op::Set(0)) => Ok(op1),
-            (Op::Set(0), Op::Loop(_)) => Ok(op1),
+            (Op::Loop(_), Op::Set(0, 0)) => Ok(op1),
+            (Op::Set(0, 0), Op::Loop(_)) => Ok(op1),
 
-            (Op::Set(_), Op::Set(n2)) => Ok(Op::Set(*n2)),
+            (Op::Set(_, offset1), Op::Set(n2, offset2)) if offset1 == offset2 => {
+                Ok(Op::Set(*n2, *offset1))
+            }
 
             _ => Err((op1, op2)),
         })
@@ -54,20 +62,42 @@ fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
 
     while let Some(op) = instructions.next() {
         match op {
-            Op::Add(..) | Op::Move(_) => {
+            Op::Add(..)
+            | Op::Set(..)
+            | Op::Clear(_)
+            | Op::PrintChar(_)
+            | Op::ReadChar(_)
+            | Op::Move(_) => {
                 let mut block = vec![op];
                 let mut new_block = Vec::new();
                 let mut offset = 0;
 
                 block.append(
                     &mut instructions
-                        .peeking_take_while(|op| matches!(op, Op::Add(..) | Op::Move(_)))
+                        .peeking_take_while(|op| {
+                            matches!(
+                                op,
+                                Op::Add(..)
+                                    | Op::Set(..)
+                                    | Op::Clear(_)
+                                    | Op::PrintChar(_)
+                                    | Op::ReadChar(_)
+                                    | Op::Move(_)
+                            )
+                        })
                         .collect_vec(),
                 );
 
                 for op in block {
                     match op {
                         Op::Add(n, off) => new_block.push(Op::Add(*n, *off + offset)),
+                        Op::Set(n, off) => new_block.push(Op::Set(*n, *off + offset)),
+
+                        Op::Clear(off) => new_block.push(Op::Clear(*off + offset)),
+
+                        Op::PrintChar(off) => new_block.push(Op::PrintChar(*off + offset)),
+                        Op::ReadChar(off) => new_block.push(Op::ReadChar(*off + offset)),
+
                         Op::Move(off) => offset += *off,
 
                         _ => unreachable!(),
@@ -79,7 +109,7 @@ fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
             }
 
             Op::Loop(body) => new_instructions.push(Op::Loop(calculate_offsets(mem::take(body)))),
-            _ => new_instructions.push(mem::replace(op, Op::Clear)),
+            _ => new_instructions.push(mem::replace(op, Op::Clear(0))),
         }
     }
 
@@ -113,7 +143,7 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
         .flat_map(|op| {
             if let Op::Loop(body) = op {
                 match body[..] {
-                    [Op::Add(1 | u8::MAX, 0)] => vec![Op::Set(0)],
+                    [Op::Add(1 | u8::MAX, offset)] => vec![Op::Set(0, offset)],
 
                     [Op::Move(step)] => vec![Op::Shift(step)],
 
@@ -144,7 +174,7 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
                                 replacement.push(Op::Mul(offset, mul));
                             }
 
-                            replacement.push(Op::Set(0));
+                            replacement.push(Op::Set(0, 0));
                             replacement
                         } else {
                             vec![Op::Loop(body)]
@@ -164,7 +194,9 @@ fn set_optimization(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Set(n1), Op::Add(n2, 0)) => Ok(Op::Set(n1 + n2)),
+            (Op::Set(n1, offset1), Op::Add(n2, offset2)) if offset1 == offset2 => {
+                Ok(Op::Set(n1 + n2, *offset1))
+            }
 
             _ => Err((op1, op2)),
         })

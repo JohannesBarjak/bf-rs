@@ -35,17 +35,24 @@ fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
                 output.push_str("    }\n");
             }
 
-            Op::PrintChar => output.push_str("    putchar(*ptr);\n"),
-            Op::ReadChar => output.push_str("    *ptr = getchar();\n"),
+            Op::PrintChar(offset) => {
+                output.push_str(format!("    putchar(*(ptr + {}));\n", offset).as_str())
+            }
 
-            Op::Clear => output.push_str("    *ptr = 0;\n"),
+            Op::ReadChar(offset) => {
+                output.push_str(format!("    *(ptr + {}) = getchar();\n", offset).as_str())
+            }
+
+            Op::Clear(offset) => {
+                output.push_str(format!("    *(ptr + {}) = 0;\n", offset).as_str())
+            }
 
             Op::Mul(offset, mul) => {
                 output.push_str(format!("    *(ptr + {}) += *ptr * {};\n", offset, mul).as_str());
             }
 
-            Op::Set(n) => {
-                output.push_str(format!("    *ptr = {};\n", n).as_str());
+            Op::Set(n, offset) => {
+                output.push_str(format!("    *(ptr + {}) = {};\n", offset, n).as_str());
             }
 
             Op::Shift(n) => {

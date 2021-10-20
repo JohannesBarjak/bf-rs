@@ -41,21 +41,22 @@ pub fn interpret(instructions: &[Op], tape: &mut Tape) {
                 }
             }
 
-            Op::PrintChar => print!("{}", tape.memory[tape.ptr] as char),
+            Op::PrintChar(offset) => print!("{}", tape.memory[tape.ptr + *offset as usize] as char),
 
-            Op::ReadChar => {
+            Op::ReadChar(offset) => {
                 io::stdout().flush().unwrap();
-                tape.memory[tape.ptr] = io::stdin().bytes().next().unwrap().unwrap() as u8;
+                tape.memory[tape.ptr + *offset as usize] =
+                    io::stdin().bytes().next().unwrap().unwrap() as u8;
             }
 
-            Op::Clear => tape.memory[tape.ptr] = 0,
+            Op::Clear(offset) => tape.memory[tape.ptr + *offset as usize] = 0,
 
             Op::Mul(offset, mul) => {
                 let index = tape.ptr + *offset as usize;
                 tape.memory[index] = tape.memory[index].wrapping_add(tape.memory[tape.ptr] * mul);
             }
 
-            Op::Set(n) => tape.memory[tape.ptr] = *n,
+            Op::Set(n, offset) => tape.memory[tape.ptr + *offset as usize] = *n,
 
             Op::Shift(n) => {
                 while tape.memory[tape.ptr] != 0 {

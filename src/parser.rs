@@ -27,8 +27,8 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
                 *instructions.last_mut().unwrap() = Op::Loop(body);
             }
 
-            Token::PrintChar => instructions.push(Op::PrintChar),
-            Token::ReadChar => instructions.push(Op::ReadChar),
+            Token::PrintChar => instructions.push(Op::PrintChar(0)),
+            Token::ReadChar => instructions.push(Op::ReadChar(0)),
         }
     }
 
