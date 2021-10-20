@@ -1,6 +1,7 @@
 use fnv::FnvHashMap;
 use itertools::Itertools;
 
+use std::cmp::Ordering;
 use std::mem;
 
 use crate::instructions::Op;
@@ -8,7 +9,7 @@ use crate::instructions::Op;
 pub fn optimize(mut instructions: Vec<Op>) -> Vec<Op> {
     let optimizer_pass = |instructions| {
         simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
-            calculate_offsets(compress_instructions(instructions)),
+            reorder_offsets(calculate_offsets(compress_instructions(instructions))),
         ))))
     };
 
@@ -51,6 +52,42 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         })
         .map(|op| match op {
             Op::Loop(body) => Op::Loop(remove_dead_code(body)),
+            _ => op,
+        })
+        .collect()
+}
+
+fn reorder_offsets(instructions: Vec<Op>) -> Vec<Op> {
+    instructions
+        .into_iter()
+        .coalesce(|op1, op2| match (&op1, &op2) {
+            (Op::Add(n1, offset1), Op::Add(n2, offset2))
+            | (Op::Set(n1, offset1), Op::Set(n2, offset2)) => match offset1.cmp(offset2) {
+                Ordering::Greater => Err((op2, op1)),
+
+                Ordering::Equal => Ok(if let Op::Add(..) = op1 {
+                    Op::Add(n1 + n2, *offset1)
+                } else {
+                    Op::Set(n1 + n2, *offset1)
+                }),
+
+                Ordering::Less => Err((op1, op2)),
+            },
+
+            (Op::Clear(offset1), Op::Clear(offset2))
+            | (Op::PrintChar(offset1), Op::PrintChar(offset2))
+            | (Op::ReadChar(offset1), Op::ReadChar(offset2)) => {
+                if offset1 > offset2 {
+                    Err((op2, op1))
+                } else {
+                    Err((op1, op2))
+                }
+            }
+
+            _ => Err((op1, op2)),
+        })
+        .map(|op| match op {
+            Op::Loop(body) => Op::Loop(reorder_offsets(body)),
             _ => op,
         })
         .collect()
