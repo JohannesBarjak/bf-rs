@@ -1,9 +1,10 @@
-use bf::interpreter::Tape;
-use bf::{interpreter, optimizer, parser, tokenizer, transpiler};
 use clap::clap_app;
 
 use std::fs;
 use std::path::Path;
+
+use bf::interpreter::Tape;
+use bf::{interpreter, optimizer, parser, tokenizer, transpiler};
 
 fn main() {
     let matches = clap_app!(bf =>

@@ -55,27 +55,27 @@ fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
     while let Some(op) = instructions.next() {
         match op {
             Op::Add(..) | Op::Move(_) => {
-                let mut part = vec![op];
-                let mut reg = Vec::new();
+                let mut block = vec![op];
+                let mut new_block = Vec::new();
                 let mut offset = 0;
 
-                part.append(
+                block.append(
                     &mut instructions
                         .peeking_take_while(|op| matches!(op, Op::Add(..) | Op::Move(_)))
                         .collect_vec(),
                 );
 
-                for op in part {
+                for op in block {
                     match op {
-                        Op::Add(n, off) => reg.push(Op::Add(*n, *off + offset)),
+                        Op::Add(n, off) => new_block.push(Op::Add(*n, *off + offset)),
                         Op::Move(off) => offset += *off,
 
                         _ => unreachable!(),
                     }
                 }
 
-                reg.push(Op::Move(offset));
-                new_instructions.append(&mut reg);
+                new_block.push(Op::Move(offset));
+                new_instructions.append(&mut new_block);
             }
 
             Op::Loop(body) => new_instructions.push(Op::Loop(calculate_offsets(mem::take(body)))),
@@ -90,8 +90,8 @@ fn compress_instructions(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Add(n1, offset), Op::Add(n2, offset2)) if offset == offset2 => {
-                Ok(Op::Add(n1 + n2, *offset))
+            (Op::Add(n1, offset1), Op::Add(n2, offset2)) if offset1 == offset2 => {
+                Ok(Op::Add(n1 + n2, *offset1))
             }
 
             (Op::Move(n1), Op::Move(n2)) => Ok(Op::Move(n1 + n2)),

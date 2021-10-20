@@ -22,8 +22,8 @@ fn c_header() -> String {
 }
 
 fn transpile_instructions(instructions: Vec<Op>, output: &mut String) {
-    for opcode in instructions {
-        match opcode {
+    for op in instructions {
+        match op {
             Op::Add(n, offset) => {
                 output.push_str(format!("    *(ptr + {}) += {};\n", offset, n).as_str())
             }
