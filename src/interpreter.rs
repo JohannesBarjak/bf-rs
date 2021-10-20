@@ -1,8 +1,8 @@
-use crate::instructions::Op;
-use crate::MEMORY_SIZE;
-
 use std::io;
 use std::io::{Read, Write};
+
+use crate::instructions::Op;
+use crate::MEMORY_SIZE;
 
 pub struct Tape {
     memory: [u8; MEMORY_SIZE],
