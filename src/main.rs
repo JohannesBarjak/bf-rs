@@ -1,4 +1,4 @@
-use clap::clap_app;
+use clap::{App, Arg};
 
 use std::fs;
 use std::path::Path;
@@ -7,14 +7,21 @@ use bf::interpreter::Tape;
 use bf::{interpreter, optimizer, parser, tokenizer, transpiler};
 
 fn main() {
-    let matches = clap_app!(bf =>
-        (version: "0.9.0")
-        (author: "Johannes B. <johannesbarja@protonmail.com>")
-        (about: "A brainfuck interpreter")
-        (@arg INPUT: +required "Brainfuck program file")
-        (@arg interpret: -i "Interpret the program instead of transpiling it")
-    )
-    .get_matches();
+    let matches = App::new("bf")
+        .version("0.9.0")
+        .author("Johannes B. <johannesbarja@protonmail.com>")
+        .about("A brainfuck interpreter")
+        .arg(
+            Arg::new("INPUT")
+                .required(true)
+                .about("Brainfuck program file"),
+        )
+        .arg(
+            Arg::new("interpret")
+                .short('i')
+                .about("Interpret the program instead of transpiling it"),
+        )
+        .get_matches();
 
     match matches.value_of("INPUT") {
         Some(file) => {
