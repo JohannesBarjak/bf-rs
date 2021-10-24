@@ -1,15 +1,14 @@
 use fnv::FnvHashMap;
 use itertools::Itertools;
 
-use std::cmp::Ordering;
 use std::mem;
 
 use crate::instructions::Op;
 
 pub fn optimize(mut instructions: Vec<Op>) -> Vec<Op> {
     let optimizer_pass = |instructions| {
-        simplify_code(remove_dead_code(set_optimization(convert_simple_loops(
-            reorder_offsets(calculate_offsets(compress_instructions(instructions))),
+        simplify_code(remove_dead_code(convert_simple_loops(reorder_offsets(
+            calculate_offsets(compress_instructions(instructions)),
         ))))
     };
 
@@ -40,12 +39,16 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
     instructions
         .into_iter()
         .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Loop(_), Op::Loop(_)) => Ok(op1),
-            (Op::Loop(_), Op::Set(0, 0)) => Ok(op1),
-            (Op::Set(0, 0), Op::Loop(_)) => Ok(op1),
+            (Op::Loop(_), Op::Loop(_))
+            | (Op::Loop(_), Op::Set(0, 0))
+            | (Op::Set(0, 0), Op::Loop(_)) => Ok(op1),
 
             (Op::Set(_, offset1), Op::Set(n2, offset2)) if offset1 == offset2 => {
                 Ok(Op::Set(*n2, *offset1))
+            }
+
+            (Op::Set(n1, offset1), Op::Add(n2, offset2)) if offset1 == offset2 => {
+                Ok(Op::Set(n1 + n2, *offset1))
             }
 
             _ => Err((op1, op2)),
@@ -57,40 +60,36 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
         .collect()
 }
 
-fn reorder_offsets(instructions: Vec<Op>) -> Vec<Op> {
-    instructions
-        .into_iter()
-        .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Add(n1, offset1), Op::Add(n2, offset2))
-            | (Op::Set(n1, offset1), Op::Set(n2, offset2)) => match offset1.cmp(offset2) {
-                Ordering::Greater => Err((op2, op1)),
+fn reorder_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
+    let mut new_instructions: Vec<Op> = Vec::with_capacity(instructions.len());
+    let mut i = 0;
 
-                Ordering::Equal => Ok(if let Op::Add(..) = op1 {
-                    Op::Add(n1 + n2, *offset1)
-                } else {
-                    Op::Set(n1 + n2, *offset1)
-                }),
+    while i < instructions.len() {
+        match &mut instructions[i] {
+            Op::Add(..) | Op::Set(..) | Op::Clear(_) => {
+                let mut block = Vec::new();
 
-                Ordering::Less => Err((op1, op2)),
-            },
-
-            (Op::Clear(offset1), Op::Clear(offset2))
-            | (Op::PrintChar(offset1), Op::PrintChar(offset2))
-            | (Op::ReadChar(offset1), Op::ReadChar(offset2)) => {
-                if offset1 > offset2 {
-                    Err((op2, op1))
-                } else {
-                    Err((op1, op2))
+                while let Some(Op::Add(_, offset) | Op::Set(_, offset) | Op::Clear(offset)) =
+                    instructions.get(i)
+                {
+                    block.push((offset, instructions[i].clone()));
+                    i += 1;
                 }
+
+                i -= 1;
+
+                block.sort_by(|(offset1, _), (offset2, _)| offset1.cmp(offset2));
+                new_instructions.append(&mut block.into_iter().map(|(_, op)| op).collect());
             }
 
-            _ => Err((op1, op2)),
-        })
-        .map(|op| match op {
-            Op::Loop(body) => Op::Loop(reorder_offsets(body)),
-            _ => op,
-        })
-        .collect()
+            Op::Loop(body) => new_instructions.push(Op::Loop(reorder_offsets(mem::take(body)))),
+            _ => new_instructions.push(mem::replace(&mut instructions[i], Op::Clear(0))),
+        }
+
+        i += 1;
+    }
+
+    new_instructions
 }
 
 fn calculate_offsets(mut instructions: Vec<Op>) -> Vec<Op> {
@@ -226,23 +225,6 @@ fn convert_simple_loops(instructions: Vec<Op>) -> Vec<Op> {
             } else {
                 vec![op]
             }
-        })
-        .collect()
-}
-
-fn set_optimization(instructions: Vec<Op>) -> Vec<Op> {
-    instructions
-        .into_iter()
-        .coalesce(|op1, op2| match (&op1, &op2) {
-            (Op::Set(n1, offset1), Op::Add(n2, offset2)) if offset1 == offset2 => {
-                Ok(Op::Set(n1 + n2, *offset1))
-            }
-
-            _ => Err((op1, op2)),
-        })
-        .map(|op| match op {
-            Op::Loop(body) => Op::Loop(set_optimization(body)),
-            _ => op,
         })
         .collect()
 }
