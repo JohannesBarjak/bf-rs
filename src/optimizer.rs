@@ -43,12 +43,14 @@ fn remove_dead_code(instructions: Vec<Op>) -> Vec<Op> {
             | (Op::Loop(_), Op::Set(0, 0))
             | (Op::Set(0, 0), Op::Loop(_)) => Ok(op1),
 
-            (Op::Set(_, offset1), Op::Set(n2, offset2)) if offset1 == offset2 => {
-                Ok(Op::Set(*n2, *offset1))
-            }
-
-            (Op::Set(n1, offset1), Op::Add(n2, offset2)) if offset1 == offset2 => {
-                Ok(Op::Set(n1 + n2, *offset1))
+            (Op::Set(n1, offset1), Op::Add(n2, offset2) | Op::Set(n2, offset2))
+                if offset1 == offset2 =>
+            {
+                Ok(if let Op::Add(..) = op2 {
+                    Op::Set(n1 + n2, *offset1)
+                } else {
+                    Op::Set(*n2, *offset1)
+                })
             }
 
             _ => Err((op1, op2)),

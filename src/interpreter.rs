@@ -14,6 +14,22 @@ impl Tape {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn add(&mut self, byte: u8, offset: isize) {
+        self.memory[self.ptr + offset as usize] += byte;
+    }
+
+    pub fn get(&self, offset: isize) -> u8 {
+        self.memory[self.ptr + offset as usize]
+    }
+
+    pub fn set(&mut self, byte: u8, offset: isize) {
+        self.memory[self.ptr + offset as usize] = byte;
+    }
+
+    pub fn mov(&mut self, offset: isize) {
+        self.ptr += offset as usize;
+    }
 }
 
 impl Default for Tape {
@@ -28,39 +44,30 @@ impl Default for Tape {
 pub fn interpret(instructions: &[Op], tape: &mut Tape) {
     for instruction in instructions {
         match instruction {
-            Op::Add(n, offset) => {
-                tape.memory[tape.ptr + *offset as usize] =
-                    tape.memory[tape.ptr + *offset as usize].wrapping_add(*n)
-            }
-
-            Op::Move(n) => tape.ptr += *n as usize,
+            Op::Add(n, offset) => tape.add(*n, *offset),
+            Op::Move(n) => tape.mov(*n),
 
             Op::Loop(body) => {
-                while tape.memory[tape.ptr] != 0 {
+                while tape.get(0) != 0 {
                     interpret(body, tape);
                 }
             }
 
-            Op::PrintChar(offset) => print!("{}", tape.memory[tape.ptr + *offset as usize] as char),
+            Op::PrintChar(offset) => print!("{}", tape.get(*offset) as char),
 
             Op::ReadChar(offset) => {
                 io::stdout().flush().unwrap();
-                tape.memory[tape.ptr + *offset as usize] =
-                    io::stdin().bytes().next().unwrap().unwrap() as u8;
+                tape.set(io::stdin().bytes().next().unwrap().unwrap() as u8, *offset);
             }
 
-            Op::Clear(offset) => tape.memory[tape.ptr + *offset as usize] = 0,
+            Op::Clear(offset) => tape.set(0, *offset),
 
-            Op::Mul(offset, mul) => {
-                let index = tape.ptr + *offset as usize;
-                tape.memory[index] = tape.memory[index].wrapping_add(tape.memory[tape.ptr] * mul);
-            }
-
-            Op::Set(n, offset) => tape.memory[tape.ptr + *offset as usize] = *n,
+            Op::Mul(offset, mul) => tape.add(tape.get(0) * mul, *offset),
+            Op::Set(n, offset) => tape.set(*n, *offset),
 
             Op::Shift(n) => {
-                while tape.memory[tape.ptr] != 0 {
-                    tape.ptr += *n as usize;
+                while tape.get(0) != 0 {
+                    tape.mov(*n);
                 }
             }
         }
