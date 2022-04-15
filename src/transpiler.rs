@@ -13,11 +13,13 @@ pub fn transpile(instructions: Vec<Op>) -> String {
 
 fn c_header() -> String {
     format!(
-        "{}{}{}{}",
+        "{}{}{}{}{}{}",
         "#include<stdio.h>\n\nint main() {\n",
-        format!("    char memory[{}] = {{0}};\n", MEMORY_SIZE),
+        "    char memory[{}] = {{0}};\n",
+        MEMORY_SIZE,
         "    char *ptr = memory;\n",
-        format!("    ptr += {};\n\n", MEMORY_SIZE / 2)
+        "    ptr += {};\n\n",
+        MEMORY_SIZE / 2
     )
 }
 
