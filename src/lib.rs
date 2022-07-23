@@ -6,4 +6,4 @@ pub mod tokenizer;
 pub mod tokens;
 pub mod transpiler;
 
-pub const MEMORY_SIZE: usize = 262_144;
+pub const MEMORY_SIZE: usize = u16::MAX as usize;

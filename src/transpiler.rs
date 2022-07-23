@@ -1,6 +1,7 @@
-use crate::instructions::Op;
+use crate::instructions::*;
 use crate::MEMORY_SIZE;
 
+use OffOp::*;
 use Op::*;
 
 #[must_use]
@@ -28,7 +29,7 @@ fn c_header() -> String {
 fn transpile_instructions(instructions: Vec<Op>, gen_code: &mut String) {
     for op in instructions {
         match op {
-            Add(n, offset) => add_line(gen_code, format!("*(ptr + {}) += {};", offset, n)),
+            Off(off, Add(n)) => add_line(gen_code, format!("*(ptr + {}) += {};", off, n)),
             Move(n) => add_line(gen_code, format!("ptr += {};", n)),
 
             Loop(body) => {
@@ -36,16 +37,16 @@ fn transpile_instructions(instructions: Vec<Op>, gen_code: &mut String) {
                 transpile_instructions(body, gen_code);
             }
 
-            PrintChar(offset) => add_line(gen_code, format!("putchar(*(ptr + {}));", offset)),
-            ReadChar(offset) => add_line(gen_code, format!("*(ptr + {}) = getchar();", offset)),
+            Off(off, PrintChar) => add_line(gen_code, format!("putchar(*(ptr + {}));", off)),
+            Off(off, ReadChar) => add_line(gen_code, format!("*(ptr + {}) = getchar();", off)),
 
-            Clear(offset) => add_line(gen_code, format!("*(ptr + {}) = 0;", offset)),
+            Off(off, Clear) => add_line(gen_code, format!("*(ptr + {}) = 0;", off)),
 
             Mul(offset, mul) => {
                 add_line(gen_code, format!("*(ptr + {}) += *ptr * {};", offset, mul))
             }
 
-            Set(n, offset) => add_line(gen_code, format!("*(ptr + {}) = {};", offset, n)),
+            Off(off, Set(n)) => add_line(gen_code, format!("*(ptr + {}) = {};", off, n)),
             Shift(n) => add_line(gen_code, format!("while (*ptr) ptr += {};", n)),
         }
     }

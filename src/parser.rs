@@ -1,5 +1,9 @@
-use crate::instructions::Op;
+use crate::instructions::*;
 use crate::tokens::Token;
+
+use OffOp::*;
+use Op::*;
+use Token::*;
 
 #[must_use]
 pub fn parse(tokens: &[Token]) -> Vec<Op> {
@@ -7,28 +11,28 @@ pub fn parse(tokens: &[Token]) -> Vec<Op> {
 
     for token in tokens {
         match token {
-            Token::Add | Token::Sub => {
-                instructions.push(Op::Add(if *token == Token::Add { 1 } else { u8::MAX }, 0));
+            Plus | Minus => {
+                instructions.push(Off(0, Add(if *token == Plus { 1 } else { u8::MAX })));
             }
 
-            Token::MoveRight | Token::MoveLeft => {
-                instructions.push(Op::Move(if *token == Token::MoveRight { 1 } else { -1 }));
+            Right | Left => {
+                instructions.push(Move(if *token == Right { 1 } else { -1 }));
             }
 
-            Token::LoopStart => {
-                instructions.push(Op::Loop(Vec::new()));
+            OpenBracket => {
+                instructions.push(Loop(Vec::new()));
                 loop_stack.push(instructions.len());
             }
 
-            Token::LoopEnd => {
+            CloseBracket => {
                 let start = loop_stack.pop().expect("unmatched `]`");
 
                 let body = instructions.split_off(start);
-                *instructions.last_mut().unwrap() = Op::Loop(body);
+                *instructions.last_mut().unwrap() = Loop(body);
             }
 
-            Token::PrintChar => instructions.push(Op::PrintChar(0)),
-            Token::ReadChar => instructions.push(Op::ReadChar(0)),
+            Dot => instructions.push(Off(0, PrintChar)),
+            Coma => instructions.push(Off(0, ReadChar)),
         }
     }
 

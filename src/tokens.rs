@@ -1,11 +1,11 @@
 #[derive(PartialEq)]
 pub enum Token {
-    Add,
-    Sub,
-    MoveLeft,
-    MoveRight,
-    LoopStart,
-    LoopEnd,
-    PrintChar,
-    ReadChar,
+    Plus,
+    Minus,
+    Left,
+    Right,
+    OpenBracket,
+    CloseBracket,
+    Dot,
+    Coma,
 }
