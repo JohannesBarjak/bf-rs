@@ -77,7 +77,7 @@ fn reorder_offsets(instructions: &[Op]) -> Vec<Op> {
             let mut block = vec![first];
 
             block.extend(
-                    // Cannot find a peeking_map_while function to rule this out
+                // Cannot find a peeking_map_while function to rule this out
                 instructions
                     .peeking_take_while(|op| valid_op(op).is_some())
                     .map(|op| valid_op(op).unwrap()),

@@ -38,7 +38,7 @@ fn main() {
                         "{}.c",
                         Path::new(file).file_stem().unwrap().to_str().unwrap()
                     ),
-                    transpiler::transpile(instructions),
+                    transpiler::transpile(&instructions),
                 )
                 .unwrap();
             }

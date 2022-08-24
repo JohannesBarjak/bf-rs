@@ -5,11 +5,8 @@ use OffOp::*;
 use Op::*;
 
 #[must_use]
-pub fn transpile(instructions: Vec<Op>) -> String {
-    let mut gen_code = c_header();
-
-    transpile_instructions(instructions, &mut gen_code);
-    gen_code
+pub fn transpile(instructions: &[Op]) -> String {
+    _transpile(instructions, true)
 }
 
 fn c_header() -> String {
@@ -26,34 +23,32 @@ fn c_header() -> String {
     )
 }
 
-fn transpile_instructions(instructions: Vec<Op>, gen_code: &mut String) {
-    for op in instructions {
-        match op {
-            Off(off, Add(n)) => add_line(gen_code, format!("*(ptr + {}) += {};", off, n)),
-            Move(n) => add_line(gen_code, format!("ptr += {};", n)),
+fn _transpile(instructions: &[Op], rec_head: bool) -> String {
+    let header = if rec_head { c_header() } else { "".to_owned() };
 
-            Loop(body) => {
-                add_line(gen_code, "while(*ptr) {".to_owned());
-                transpile_instructions(body, gen_code);
-            }
+    instructions.iter().fold(header, |acc, op| {
+        add_line(
+            acc,
+            match op {
+                Off(off, Add(n)) => format!("*(ptr + {}) += {};", off, n),
+                Move(n) => format!("ptr += {};", n),
 
-            Off(off, PrintChar) => add_line(gen_code, format!("putchar(*(ptr + {}));", off)),
-            Off(off, ReadChar) => add_line(gen_code, format!("*(ptr + {}) = getchar();", off)),
+                Loop(body) => "while(*ptr) {\n".to_owned() + _transpile(body, false).as_str(),
 
-            Off(off, Clear) => add_line(gen_code, format!("*(ptr + {}) = 0;", off)),
+                Off(off, PrintChar) => format!("putchar(*(ptr + {}));", off),
+                Off(off, ReadChar) => format!("*(ptr + {}) = getchar();", off),
 
-            Mul(offset, mul) => {
-                add_line(gen_code, format!("*(ptr + {}) += *ptr * {};", offset, mul))
-            }
+                Off(off, Clear) => format!("*(ptr + {}) = 0;", off),
 
-            Off(off, Set(n)) => add_line(gen_code, format!("*(ptr + {}) = {};", off, n)),
-            Shift(n) => add_line(gen_code, format!("while (*ptr) ptr += {};", n)),
-        }
-    }
+                Mul(offset, mul) => format!("*(ptr + {}) += *ptr * {};", offset, mul),
 
-    add_line(gen_code, "}".to_owned());
+                Off(off, Set(n)) => format!("*(ptr + {}) = {};", off, n),
+                Shift(n) => format!("while (*ptr) ptr += {};", n),
+            },
+        )
+    }) + "    }"
 }
 
-fn add_line(gen_code: &mut String, line: String) {
-    gen_code.push_str(format!("    {}\n", line).as_str());
+fn add_line(code: String, line: String) -> String {
+    code + format!("    {}\n", line).as_str()
 }
