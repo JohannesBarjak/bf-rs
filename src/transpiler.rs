@@ -6,7 +6,7 @@ use Op::*;
 
 #[must_use]
 pub fn transpile(instructions: &[Op]) -> String {
-    _transpile(instructions, true)
+    _transpile(instructions, c_header())
 }
 
 fn c_header() -> String {
@@ -23,17 +23,17 @@ fn c_header() -> String {
     )
 }
 
-fn _transpile(instructions: &[Op], rec_head: bool) -> String {
-    let header = if rec_head { c_header() } else { "".to_owned() };
-
-    instructions.iter().fold(header, |acc, op| {
+fn _transpile(instructions: &[Op], gen_code: String) -> String {
+    instructions.iter().fold(gen_code, |acc, op| {
         add_line(
             acc,
             match op {
                 Off(off, Add(n)) => format!("*(ptr + {}) += {};", off, n),
                 Move(n) => format!("ptr += {};", n),
 
-                Loop(body) => "while(*ptr) {\n".to_owned() + _transpile(body, false).as_str(),
+                Loop(body) => {
+                    "while(*ptr) {\n".to_owned() + _transpile(body, String::new()).as_str()
+                }
 
                 Off(off, PrintChar) => format!("putchar(*(ptr + {}));", off),
                 Off(off, ReadChar) => format!("*(ptr + {}) = getchar();", off),
